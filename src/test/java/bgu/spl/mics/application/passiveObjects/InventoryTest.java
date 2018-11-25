@@ -18,6 +18,10 @@ public class InventoryTest {
 
     @Test
     public void getInstance() {
+        Inventory inventory1 = Inventory.getInstance();
+        Inventory inventory2 = Inventory.getInstance();
+        assertEquals(inventory1, inventory2);
+
     }
 
     @Test

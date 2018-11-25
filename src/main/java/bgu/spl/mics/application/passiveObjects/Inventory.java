@@ -14,12 +14,22 @@ package bgu.spl.mics.application.passiveObjects;
  */
 public class Inventory {
 
+
     /**
      * Retrieves the single instance of this class.
      */
-    public static Inventory getInstance() {
-        //TODO: Implement this
-        return null;
+
+
+    private BookInventoryInfo[] bookInventoryInfos;
+    private static Inventory theSingleton = null;
+
+    public Inventory() {}
+
+    public static Inventory getInstance(){
+        if (Inventory.theSingleton == null){
+            Inventory.theSingleton = new Inventory();
+        }
+        return Inventory.theSingleton;
     }
 
     /**
@@ -55,8 +65,21 @@ public class Inventory {
      * @return the price of the book if it is available, -1 otherwise.
      */
     public int checkAvailabiltyAndGetPrice(String book) {
-        //TODO: Implement this
+        BookInventoryInfo bookInfo = getBookInfo(book);
+        if ((bookInfo != null) && (bookInfo.getAmountInInventory() > 0)){
+            return bookInfo.getPrice();
+        }
         return -1;
+    }
+
+    private BookInventoryInfo getBookInfo(String bookName){
+        for (BookInventoryInfo bookInfo :
+                bookInventoryInfos) {
+            if (bookInfo.getBookTitle().equals(bookName)){
+                return bookInfo;
+            }
+        }
+        return null;
     }
 
     /**
