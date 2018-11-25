@@ -18,6 +18,8 @@ public class ResourcesHolder {
      */
 	private static ResourcesHolder theSingleton = null;
 
+	private ResourcesHolder() {}
+
 	public static ResourcesHolder getInstance(){
 		if (ResourcesHolder.theSingleton == null){
 			ResourcesHolder.theSingleton = new ResourcesHolder();

@@ -20,9 +20,10 @@ public class MoneyRegister {
      * Retrieves the single instance of this class.
      */
 
-	private ArrayList<OrderReceipt> orderReceipts;
+    private static MoneyRegister theSingleton = null;
+	private static ArrayList<OrderReceipt> orderReceipts;
 
-	private static MoneyRegister theSingleton = null;
+	private MoneyRegister(){}
 
 	public static MoneyRegister getInstance(){
 		if (MoneyRegister.theSingleton == null){

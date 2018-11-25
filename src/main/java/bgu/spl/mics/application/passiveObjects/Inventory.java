@@ -1,6 +1,8 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
+import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Passive data-object representing the store inventory.
@@ -15,15 +17,19 @@ package bgu.spl.mics.application.passiveObjects;
 public class Inventory {
 
 
+    public static int getBookInventoryInfosSize() {
+        return bookInventoryInfos.size();
+    }
+
     /**
      * Retrieves the single instance of this class.
      */
 
 
-    private BookInventoryInfo[] bookInventoryInfos;
+    private static ArrayList<BookInventoryInfo> bookInventoryInfos;
     private static Inventory theSingleton = null;
 
-    public Inventory() {}
+    private Inventory() {}
 
     public static Inventory getInstance(){
         if (Inventory.theSingleton == null){
@@ -40,7 +46,7 @@ public class Inventory {
      * 						of the inventory.
      */
     public void load (BookInventoryInfo[ ] inventory ) {
-
+        bookInventoryInfos.addAll(Arrays.asList(inventory));
     }
 
     /**

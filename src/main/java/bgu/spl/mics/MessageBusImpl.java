@@ -9,7 +9,9 @@ public class MessageBusImpl implements MessageBus {
 
     private static MessageBusImpl theSingleton = null;
 
-	public static MessageBusImpl getInstance(){
+    private MessageBusImpl() {}
+
+    public static MessageBusImpl getInstance(){
 	    if (MessageBusImpl.theSingleton == null){
             MessageBusImpl.theSingleton = new MessageBusImpl();
         }
