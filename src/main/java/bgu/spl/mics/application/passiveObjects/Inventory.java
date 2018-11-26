@@ -1,8 +1,10 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 
 /**
  * Passive data-object representing the store inventory.
@@ -58,11 +60,27 @@ public class Inventory {
      * 			second should reduce by one the number of books of the desired type.
      */
     public OrderResult take (String book) {
+        synchronized(theSingleton) {
+            for (BookInventoryInfo bookInfo : bookInventoryInfos) {
+                if (bookInfo.getBookTitle().equals(book) && bookInfo.getAmountInInventory() > 0) {
+                    bookInfo.decreaseAmount();
+                    return OrderResult.SUCCESSFULLY_TAKEN;
+                }
+            }
+            return OrderResult.NOT_IN_STOCK;
+        }
 
-        return null;
     }
 
-
+    public int getAmount(String book){
+        // TODO: sync here>?
+        BookInventoryInfo bookInfo = getBookInfo(book);
+        if(book != null){
+            return bookInfo.getAmountInInventory();
+        }else{
+            return -1;
+        }
+    }
 
     /**
      * Checks if a certain book is available in the inventory.
@@ -71,11 +89,13 @@ public class Inventory {
      * @return the price of the book if it is available, -1 otherwise.
      */
     public int checkAvailabiltyAndGetPrice(String book) {
-        BookInventoryInfo bookInfo = getBookInfo(book);
-        if ((bookInfo != null) && (bookInfo.getAmountInInventory() > 0)){
-            return bookInfo.getPrice();
+        synchronized (theSingleton) {
+            BookInventoryInfo bookInfo = getBookInfo(book);
+            if ((bookInfo != null) && (bookInfo.getAmountInInventory() > 0)) {
+                return bookInfo.getPrice();
+            }
+            return -1;
         }
-        return -1;
     }
 
     private BookInventoryInfo getBookInfo(String bookName){
@@ -96,7 +116,24 @@ public class Inventory {
      * their respective available amount in the inventory. 
      * This method is called by the main method in order to generate the output.
      */
-    public void printInventoryToFile(String filename){
-        //TODO: Implement this
+
+    public void printInventoryToFile(String filename) throws IOException {
+        // TODO: elad is this ok?
+        HashMap<String, Integer> map = new HashMap<String, Integer>();
+        File file = new File(filename);
+        FileOutputStream f = new FileOutputStream(file);
+        ObjectOutputStream s = new ObjectOutputStream(f);
+        try{
+            synchronized (theSingleton) {
+                for (BookInventoryInfo bookInfo : bookInventoryInfos) {
+                    map.put(bookInfo.getBookTitle(), bookInfo.getAmountInInventory());
+                }
+                s.writeObject(map);
+                s.close();
+            }
+        }finally {
+            s.writeObject(map);
+            s.close();
+        }
     }
 }

@@ -11,8 +11,17 @@ public class BookInventoryInfo {
     private String bookTitle;
     private int amount;
     private int price;
+    private final Inventory inventory = Inventory.getInstance();
 
-    public BookInventoryInfo(String bookTitle, int amount, int price) {
+	public void decreaseAmount() {
+	    synchronized (inventory) {
+            if (amount > 0) {
+                this.amount--;
+            }
+        }
+	}
+
+	public BookInventoryInfo(String bookTitle, int amount, int price) {
         this.bookTitle = bookTitle;
         this.amount = amount;
         this.price = price;
