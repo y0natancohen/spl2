@@ -1,5 +1,8 @@
 package bgu.spl.mics;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * The MicroService is an abstract class that any micro-service in the system
  * must extend. The abstract MicroService class is responsible to get and
@@ -19,6 +22,7 @@ package bgu.spl.mics;
  * <p>
  */
 public abstract class MicroService implements Runnable {
+    private Map<String , Callback> eventToCallback;
 
     private boolean terminated = false;
     private final String name;
@@ -29,6 +33,7 @@ public abstract class MicroService implements Runnable {
      */
     public MicroService(String name) {
         this.name = name;
+        this.eventToCallback = new ConcurrentHashMap<>();
     }
 
     /**

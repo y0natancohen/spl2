@@ -1,8 +1,6 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
-import com.sun.corba.se.impl.resolver.ORBDefaultInitRefResolverImpl;
-
 import java.util.ArrayList;
 
 /**
