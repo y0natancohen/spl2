@@ -13,13 +13,42 @@ import bgu.spl.mics.MicroService;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class TimeService extends MicroService{
+	private static TimeService theSingleton = null;
+	private static int speed;
+	private static int duration;
 
+	public static TimeService getInstance(){
+		if (TimeService.theSingleton == null){
+			TimeService.theSingleton = new TimeService();
+		}
+		return TimeService.theSingleton;
+	}
+
+
+	// TODO: public is their signature here
+    // TODO: how to prevent from creating another one?
 	public TimeService() {
 		super("Change_This_Name");
 		// TODO Implement this
 	}
 
-	@Override
+    public static int getSpeed() {
+        return speed;
+    }
+
+    public static void setSpeed(int speed) {
+        TimeService.speed = speed;
+    }
+
+    public static int getDuration() {
+        return duration;
+    }
+
+    public static void setDuration(int duration) {
+        TimeService.duration = duration;
+    }
+
+    @Override
 	protected void initialize() {
 		// TODO Implement this
 		

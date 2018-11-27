@@ -10,15 +10,22 @@ public class DeliveryVehicle {
 	/**
      * Constructor.   
      */
-	 public DeliveryVehicle(int license, int speed) {
-		// TODO Implement this
-	  }
+
+	private int licence;
+	private int speed;
+
+
+    public DeliveryVehicle(int licence, int speed) {
+        this.licence = licence;
+        this.speed = speed;
+    }
+
+
 	/**
      * Retrieves the license of this delivery vehicle.   
      */
 	public int getLicense() {
-		// TODO Implement this
-		return 0;
+		return licence;
 	}
 	
 	/**
@@ -27,8 +34,7 @@ public class DeliveryVehicle {
      * @return Number of ticks needed for 1 Km.
      */
 	public int getSpeed() {
-		// TODO Implement this
-		return 0;
+		return speed;
 	}
 	
 	/**

@@ -16,9 +16,15 @@ public class ResourcesHolder {
 	/**
      * Retrieves the single instance of this class.
      */
-	public static ResourcesHolder getInstance() {
-		//TODO: Implement this
-		return null;
+	private static ResourcesHolder theSingleton = null;
+
+	private ResourcesHolder() {}
+
+	public static ResourcesHolder getInstance(){
+		if (ResourcesHolder.theSingleton == null){
+			ResourcesHolder.theSingleton = new ResourcesHolder();
+		}
+		return ResourcesHolder.theSingleton;
 	}
 	
 	/**

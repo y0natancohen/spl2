@@ -1,6 +1,9 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
+import com.sun.corba.se.impl.resolver.ORBDefaultInitRefResolverImpl;
+
+import java.util.ArrayList;
 
 /**
  * Passive object representing the store finance management. 
@@ -16,9 +19,17 @@ public class MoneyRegister {
 	/**
      * Retrieves the single instance of this class.
      */
-	public static MoneyRegister getInstance() {
-		//TODO: Implement this
-		return null;
+
+    private static MoneyRegister theSingleton = null;
+	private static ArrayList<OrderReceipt> orderReceipts;
+
+	private MoneyRegister(){}
+
+	public static MoneyRegister getInstance(){
+		if (MoneyRegister.theSingleton == null){
+			MoneyRegister.theSingleton = new MoneyRegister();
+		}
+		return MoneyRegister.theSingleton;
 	}
 	
 	/**
@@ -27,15 +38,21 @@ public class MoneyRegister {
      * @param r		The receipt to save in the money register.
      */
 	public void file (OrderReceipt r) {
-		//TODO: Implement this.
+		// TODO: sync here
+		orderReceipts.add(r);
 	}
 	
 	/**
      * Retrieves the current total earnings of the store.  
      */
 	public int getTotalEarnings() {
-		//TODO: Implement this
-		return 0;
+	    int sum = 0;
+        for (OrderReceipt orderReceipt :
+                orderReceipts) {
+            // TODO: if statment here? maybe not sum all orders
+            sum += orderReceipt.getPrice();
+        }
+		return sum;
 	}
 	
 	/**
@@ -44,7 +61,9 @@ public class MoneyRegister {
      * @param amount 	amount to charge
      */
 	public void chargeCreditCard(Customer c, int amount) {
-		// TODO Implement this
+		// TODO: sync here
+        CreditCard card = c.getCreditCard();
+        card.charge(amount);
 	}
 	
 	/**

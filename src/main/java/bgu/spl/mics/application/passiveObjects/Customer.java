@@ -13,33 +13,49 @@ public class Customer {
 	/**
      * Retrieves the name of the customer.
      */
-	public String getName() {
-		// TODO Implement this
-		return null;
+
+	private int id;
+	private String name;
+	private String address;
+	private int distance;
+	private CreditCard creditCard;
+
+    public CreditCard getCreditCard() {
+        return creditCard;
+    }
+
+    public Customer(int id, String name, String address, int distance, CreditCard creditCard) {
+        this.id = id;
+        this.name = name;
+
+        this.address = address;
+        this.distance = distance;
+        this.creditCard = creditCard;
+    }
+
+    public String getName() {
+		return name;
 	}
 
 	/**
      * Retrieves the ID of the customer  . 
      */
 	public int getId() {
-		// TODO Implement this
-		return 0;
+		return id;
 	}
 	
 	/**
      * Retrieves the address of the customer.  
      */
 	public String getAddress() {
-		// TODO Implement this
-		return null;
+		return address;
 	}
 	
 	/**
      * Retrieves the distance of the customer from the store.  
      */
 	public int getDistance() {
-		// TODO Implement this
-		return 0;
+		return distance;
 	}
 
 	
@@ -59,16 +75,14 @@ public class Customer {
      * @return Amount of money left.   
      */
 	public int getAvailableCreditAmount() {
-		// TODO Implement this
-		return 0;
+		return creditCard.getAmount();
 	}
 	
 	/**
      * Retrieves this customers credit card serial number.    
      */
 	public int getCreditNumber() {
-		// TODO Implement this
-		return 0;
+		return creditCard.getNumber();
 	}
 	
 }
