@@ -4,16 +4,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.File;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 public class InventoryTest {
     public Inventory inventory;
@@ -31,13 +25,11 @@ public class InventoryTest {
         bookInventoryInfos[2] = new BookInventoryInfo("book3", 30, 300);
         inventory.load(bookInventoryInfos);
 
-        tempFile = File.createTempFile("inventory-test-file", ".tmp");
     }
 
 
     @After
     public void tearDown() throws Exception {
-        tempFile.delete();
     }
 
     @Test
@@ -84,41 +76,4 @@ public class InventoryTest {
         assertEquals(-1, inventory.checkAvailabiltyAndGetPrice("book4"));
     }
 
-    @Test
-    public void printInventoryToFile() {
-        String filename = tempFile.getAbsolutePath();
-        try {
-            inventory.printInventoryToFile(filename);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-//        JSONParser parser = new JSONParser();
-        HashMap<String, Integer> map = new HashMap<String, Integer>();
-
-        try {
-            FileInputStream fis = new FileInputStream(filename);
-            ObjectInputStream ois = new ObjectInputStream(fis);
-            try {
-                map = (HashMap) ois.readObject();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }finally {
-                ois.close();
-                fis.close();
-            }
-//            JSONObject json = (JSONObject) parser.parse(new FileReader(filename));
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        for (Map.Entry<String, Integer> entry : map.entrySet()){
-            String bookName = entry.getKey();
-            int bookAmount = entry.getValue();
-            assertEquals(inventory.getAmount(bookName),bookAmount);
-        }
-
-
-    }
 }

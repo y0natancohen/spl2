@@ -1,10 +1,11 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.*;
 
 /**
  * Passive data-object representing the store inventory.
@@ -19,8 +20,8 @@ import java.util.HashMap;
 public class Inventory {
 
 
-    public static int getBookInventoryInfosSize() {
-        return bookInventoryInfos.size();
+    public int getBookInventoryInfosSize() {
+        return this.bookInventoryInfos.size();
     }
 
     /**
@@ -28,39 +29,41 @@ public class Inventory {
      */
 
 
-    private static ArrayList<BookInventoryInfo> bookInventoryInfos;
-    private static Inventory theSingleton = null;
+    private List<BookInventoryInfo> bookInventoryInfos;
 
-    private Inventory() {}
+    private final static Inventory theSingleton = new Inventory();
 
-    public static Inventory getInstance(){
-        if (Inventory.theSingleton == null){
-            Inventory.theSingleton = new Inventory();
-        }
-        return Inventory.theSingleton;
+    private Inventory() {
+        bookInventoryInfos = new ArrayList<>();
+    }
+
+    public static Inventory getInstance() {
+        return theSingleton;
     }
 
     /**
      * Initializes the store inventory. This method adds all the items given to the store
      * inventory.
      * <p>
-     * @param inventory 	Data structure containing all data necessary for initialization
-     * 						of the inventory.
+     *
+     * @param inventory Data structure containing all data necessary for initialization
+     *                  of the inventory.
      */
-    public void load (BookInventoryInfo[ ] inventory ) {
-        bookInventoryInfos.addAll(Arrays.asList(inventory));
+    public void load(BookInventoryInfo[] inventory) {
+        bookInventoryInfos = new ArrayList<>(Arrays.asList(inventory));
     }
 
     /**
      * Attempts to take one book from the store.
      * <p>
-     * @param book 		Name of the book to take from the store
-     * @return 	an {@link Enum} with options NOT_IN_STOCK and SUCCESSFULLY_TAKEN.
-     * 			The first should not change the state of the inventory while the 
-     * 			second should reduce by one the number of books of the desired type.
+     *
+     * @param book Name of the book to take from the store
+     * @return an {@link Enum} with options NOT_IN_STOCK and SUCCESSFULLY_TAKEN.
+     * The first should not change the state of the inventory while the
+     * second should reduce by one the number of books of the desired type.
      */
-    public OrderResult take (String book) {
-        synchronized(theSingleton) {
+    public OrderResult take(String book) {
+        synchronized (theSingleton) {
             for (BookInventoryInfo bookInfo : bookInventoryInfos) {
                 if (bookInfo.getBookTitle().equals(book) && bookInfo.getAmountInInventory() > 0) {
                     bookInfo.decreaseAmount();
@@ -72,20 +75,11 @@ public class Inventory {
 
     }
 
-    public int getAmount(String book){
-        // TODO: sync here>?
-        BookInventoryInfo bookInfo = getBookInfo(book);
-        if(book != null){
-            return bookInfo.getAmountInInventory();
-        }else{
-            return -1;
-        }
-    }
-
     /**
      * Checks if a certain book is available in the inventory.
      * <p>
-     * @param book 		Name of the book.
+     *
+     * @param book Name of the book.
      * @return the price of the book if it is available, -1 otherwise.
      */
     public int checkAvailabiltyAndGetPrice(String book) {
@@ -98,10 +92,10 @@ public class Inventory {
         }
     }
 
-    private BookInventoryInfo getBookInfo(String bookName){
+    private BookInventoryInfo getBookInfo(String bookName) {
         for (BookInventoryInfo bookInfo :
                 bookInventoryInfos) {
-            if (bookInfo.getBookTitle().equals(bookName)){
+            if (bookInfo.getBookTitle().equals(bookName)) {
                 return bookInfo;
             }
         }
@@ -109,21 +103,19 @@ public class Inventory {
     }
 
     /**
-     * 
      * <p>
      * Prints to a file name @filename a serialized object HashMap<String,Integer> which is a Map of all the books in the inventory. The keys of the Map (type {@link String})
      * should be the titles of the books while the values (type {@link Integer}) should be
-     * their respective available amount in the inventory. 
+     * their respective available amount in the inventory.
      * This method is called by the main method in order to generate the output.
      */
 
     public void printInventoryToFile(String filename) throws IOException {
-        // TODO: elad is this ok?
-        HashMap<String, Integer> map = new HashMap<String, Integer>();
+        Map<String, Integer> map = new HashMap<>();
         File file = new File(filename);
         FileOutputStream f = new FileOutputStream(file);
         ObjectOutputStream s = new ObjectOutputStream(f);
-        try{
+        try {
             synchronized (theSingleton) {
                 for (BookInventoryInfo bookInfo : bookInventoryInfos) {
                     map.put(bookInfo.getBookTitle(), bookInfo.getAmountInInventory());
@@ -131,7 +123,7 @@ public class Inventory {
                 s.writeObject(map);
                 s.close();
             }
-        }finally {
+        } finally {
             s.writeObject(map);
             s.close();
         }
