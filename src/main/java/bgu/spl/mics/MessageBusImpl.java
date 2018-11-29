@@ -3,8 +3,13 @@ package bgu.spl.mics;
 import bgu.spl.mics.application.ServicePool;
 import org.apache.commons.collections4.CollectionUtils;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * The {@link MessageBusImpl class is the implementation of the MessageBus interface.
@@ -15,6 +20,8 @@ public class MessageBusImpl implements MessageBus {
     private Map<String, ServicePool> eventTypeToServicePool;
     private Map<String, ServicePool> broadcastTypeToServicePool;
 
+    private Map<Class, List<MicroService>> eventTypeToServices;
+    private Map<String, BlockingQueue<Event>> serviceToQueue;
 
     private static MessageBusImpl theSingleton = null;
 
@@ -35,39 +42,29 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-        //todo is sync?
-
-        ServicePool pool = eventTypeToServicePool.get(type.getSimpleName());
-        if (pool == null) {
-            pool = new ServicePool();
-            eventTypeToServicePool.put(type.getSimpleName(), pool);
-        }
-        pool.add(m);
-
-        eventTypeToServicePool.put(type.getSimpleName(), pool);
-//        serviceTypeToServices.put(m.getClass().getSimpleName(), microServices);
-
-        register(m);
-
-    }
-
-    @Override
-    public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-        List<MicroService> microServices = broadcastTypeToServicePool.get(type.getSimpleName());
+        //todo is synch?
+        List<MicroService> microServices = eventTypeToServices.get(type.getClass());
         if (CollectionUtils.isEmpty(microServices)) {
             microServices = new ArrayList<>();
             microServices.add(m);
         } else {
             microServices.add(m);
         }
-        broadcastTypeToServicePool.put(type.getSimpleName(), microServices);
+        eventTypeToServices.put(type.getClass(), microServices);
+    }
+
+    @Override
+    public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
+        //todo same as above
 
     }
 
     @Override
     public <T> void complete(Event<T> e, T result) {
-
-
+        Future<T> futureToResolve = e.getFuture();
+        if (futureToResolve != null) {
+            futureToResolve.resolve(result);
+        }
     }
 
     @Override
@@ -80,43 +77,39 @@ public class MessageBusImpl implements MessageBus {
         }
     }
 
-	
-	@Override
-	public <T> Future<T> sendEvent(Event<T> e) {
-		Future<T> future = new Future<>();
-		String eventType = e.getClass().getSimpleName();
-        List<MicroService> services = eventTypeToServicePool.get(eventType);
-        MicroService service = getNextRobinService(services, eventType);
-        Queue queue = serviceToQueue.get(service);
-        queue.add(e);
-		return future;
-	}
 
-    private MicroService getNextRobinService(List<MicroService> services, String eventType) {
-        synchronized (theSingleton){
-            int index = eventTypeToRobinIndex.get(eventType);
-            eventTypeToRobinIndex.put(eventType, (index + 1) % services.size());
-            return services.get(index);
+    @Override
+    public <T> Future<T> sendEvent(Event<T> e) {
+        // TODO pick service in round robin by event type
+        List<MicroService> services = eventTypeToServices.get("");
+        MicroService microService = services.get(0);
+        BlockingQueue<Event> events = serviceToQueue.get(microService);
+        try {
+            events.put(e);
+        } catch (InterruptedException e1) {
+            e1.printStackTrace();
         }
+        Future<T> future = new Future<>();
+        e.setFuture(future);
+        return future;
     }
 
     @Override
-	public void register(MicroService m) {
-        serviceToQueue.put(m, new LinkedList());
-
+    public void register(MicroService m) {
+        // TODO need to find unique identifier for service
+        serviceToQueue.put(m.getName(), new LinkedBlockingQueue<>());
     }
 
     @Override
     public void unregister(MicroService m) {
-        serviceToQueue.remove(m);
-        List<MicroService> services = serviceTypeToServices.get(m.getClass().getSimpleName());
-
+        serviceToQueue.remove(m.getName());
+        // todo clear from subscription
     }
 
     @Override
     public Message awaitMessage(MicroService m) throws InterruptedException {
-        // TODO Auto-generated method stub
-        return null;
+        BlockingQueue<Event> serviceQ = serviceToQueue.get(m.getName());
+        return serviceQ.take();
     }
 
 
