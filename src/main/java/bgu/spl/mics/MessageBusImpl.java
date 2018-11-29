@@ -1,13 +1,11 @@
 package bgu.spl.mics;
 
-import bgu.spl.mics.application.ServicePool;
 import org.apache.commons.collections4.CollectionUtils;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -17,20 +15,19 @@ import java.util.concurrent.LinkedBlockingQueue;
  * Only private fields and methods can be added to this class.
  */
 public class MessageBusImpl implements MessageBus {
-    private Map<String, ServicePool> eventTypeToServicePool;
-    private Map<String, ServicePool> broadcastTypeToServicePool;
+
 
     private Map<Class, List<MicroService>> eventTypeToServices;
-    private Map<String, BlockingQueue<Event>> serviceToQueue;
+    private Map<String, BlockingQueue<Message>> serviceToQueue;
+    private Map<Class, List<MicroService>> broadcastToServices;
+
 
     private static MessageBusImpl theSingleton = null;
 
     private MessageBusImpl() {
-        eventTypeToServicePool = new ConcurrentHashMap<>();
-//        serviceTypeToServices = new ConcurrentHashMap<>();
-        broadcastTypeToServicePool = new ConcurrentHashMap<>();
-//        serviceToQueue = new ConcurrentHashMap<>();
-//        eventTypeToRobinIndex = new ConcurrentHashMap<>();
+        eventTypeToServices = new ConcurrentHashMap<>();
+        serviceToQueue = new ConcurrentHashMap<>();
+        broadcastToServices = new ConcurrentHashMap<>();
     }
 
     public static MessageBusImpl getInstance() {
@@ -55,8 +52,14 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-        //todo same as above
-
+        List<MicroService> microServices = broadcastToServices.get(type.getClass());
+        if (CollectionUtils.isEmpty(microServices)) {
+            microServices = new ArrayList<>();
+            microServices.add(m);
+        } else {
+            microServices.add(m);
+        }
+        broadcastToServices.put(type.getClass(), microServices);
     }
 
     @Override
@@ -69,21 +72,22 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void sendBroadcast(Broadcast b) {
-        String broadcastType = b.getClass().getSimpleName();
-        List<MicroService> services = broadcastTypeToServicePool.get(broadcastType);
-        for (MicroService service: services) {
-            Queue queue = serviceToQueue.get(service);
-            queue.add(b);
-        }
+        broadcastToServices.get(b).forEach(microService -> {
+            BlockingQueue<Message> currentQ = serviceToQueue.get(microService.getName());
+            try {
+                currentQ.put(b);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
 
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
+        List<MicroService> services = eventTypeToServices.get(e.getClass());
         // TODO pick service in round robin by event type
-        List<MicroService> services = eventTypeToServices.get("");
-        MicroService microService = services.get(0);
-        BlockingQueue<Event> events = serviceToQueue.get(microService);
+        BlockingQueue<Message> events = serviceToQueue.get(services.get(0));
         try {
             events.put(e);
         } catch (InterruptedException e1) {
@@ -92,14 +96,6 @@ public class MessageBusImpl implements MessageBus {
         Future<T> future = new Future<>();
         e.setFuture(future);
         return future;
-    }
-
-    private MicroService getNextRobinService(List<MicroService> services, String eventType) {
-        synchronized (theSingleton){
-            int index = eventTypeToRobinIndex.get(eventType);
-            eventTypeToRobinIndex.put(eventType, (index + 1) % services.size());
-            return services.get(index);
-        }
     }
 
     @Override
@@ -116,7 +112,7 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public Message awaitMessage(MicroService m) throws InterruptedException {
-        BlockingQueue<Event> serviceQ = serviceToQueue.get(m.getName());
+        BlockingQueue<Message> serviceQ = serviceToQueue.get(m.getName());
         return serviceQ.take();
     }
 
