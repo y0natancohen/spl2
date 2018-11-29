@@ -1,7 +1,6 @@
 package bgu.spl.mics;
 
 import bgu.spl.mics.application.ServicePool;
-import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -13,15 +12,16 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MessageBusImpl implements MessageBus {
     private Map<String, ServicePool> eventTypeToServicePool;
-    private Map<String, ServicePool> broadcastTypeToServicePool;
+    private Map<String, List<ServicePool>> broadcastTypeToServicePools;
+    private Map<String, ServicePool> serviceTypeToPool;
 
 
     private static MessageBusImpl theSingleton = null;
 
     private MessageBusImpl() {
         eventTypeToServicePool = new ConcurrentHashMap<>();
-//        serviceTypeToServices = new ConcurrentHashMap<>();
-        broadcastTypeToServicePool = new ConcurrentHashMap<>();
+        serviceTypeToPool = new ConcurrentHashMap<>();
+        broadcastTypeToServicePools = new ConcurrentHashMap<>();
 //        serviceToQueue = new ConcurrentHashMap<>();
 //        eventTypeToRobinIndex = new ConcurrentHashMap<>();
     }
@@ -37,31 +37,44 @@ public class MessageBusImpl implements MessageBus {
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
         //todo is sync?
 
-        ServicePool pool = eventTypeToServicePool.get(type.getSimpleName());
-        if (pool == null) {
-            pool = new ServicePool();
-            eventTypeToServicePool.put(type.getSimpleName(), pool);
-        }
-        pool.add(m);
+        ServicePool correctPool = serviceTypeToPool.get(type.getSimpleName());
+        correctPool = instansiatePoolIfAbcent(m, correctPool);
+        correctPool.addIfAbcent(m);
+        serviceTypeToPool.put(m.getClass().getSimpleName(), correctPool);
 
-        eventTypeToServicePool.put(type.getSimpleName(), pool);
-//        serviceTypeToServices.put(m.getClass().getSimpleName(), microServices);
+        eventTypeToServicePool.put(type.getSimpleName(), correctPool);
 
         register(m);
 
     }
 
+    private ServicePool instansiatePoolIfAbcent(MicroService m, ServicePool pool) {
+        if (pool == null) {
+            pool = new ServicePool();
+            serviceTypeToPool.put(m.getClass().getSimpleName(), pool);
+        }
+        return pool;
+    }
+
+
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-        List<MicroService> microServices = broadcastTypeToServicePool.get(type.getSimpleName());
-        if (CollectionUtils.isEmpty(microServices)) {
-            microServices = new ArrayList<>();
-            microServices.add(m);
-        } else {
-            microServices.add(m);
-        }
-        broadcastTypeToServicePool.put(type.getSimpleName(), microServices);
+        ServicePool correctPool = serviceTypeToPool.get(m.getClass().getSimpleName());
+        List<ServicePool> subscribedPools = broadcastTypeToServicePools.get(type.getSimpleName());
+        subscribedPools = instanciatePoolsListIfAbcent(type, subscribedPools);
 
+        if (!subscribedPools.contains(correctPool)){
+            subscribedPools.add(correctPool);
+        }
+
+    }
+
+    private List<ServicePool> instanciatePoolsListIfAbcent(Class<? extends Broadcast> type, List<ServicePool> broadcastPools) {
+        if (broadcastPools == null) {
+            broadcastPools = new ArrayList<>();
+            broadcastTypeToServicePools.put(type.getSimpleName(), broadcastPools);
+        }
+        return broadcastPools;
     }
 
     @Override
@@ -73,10 +86,9 @@ public class MessageBusImpl implements MessageBus {
     @Override
     public void sendBroadcast(Broadcast b) {
         String broadcastType = b.getClass().getSimpleName();
-        List<MicroService> services = broadcastTypeToServicePool.get(broadcastType);
-        for (MicroService service: services) {
-            Queue queue = serviceToQueue.get(service);
-            queue.add(b);
+        List<ServicePool> broadcastPools = broadcastTypeToServicePools.get(broadcastType);
+        for (ServicePool pool: broadcastPools) {
+            pool.addToEveryonesQueue(b);
         }
     }
 
@@ -85,31 +97,22 @@ public class MessageBusImpl implements MessageBus {
 	public <T> Future<T> sendEvent(Event<T> e) {
 		Future<T> future = new Future<>();
 		String eventType = e.getClass().getSimpleName();
-        List<MicroService> services = eventTypeToServicePool.get(eventType);
-        MicroService service = getNextRobinService(services, eventType);
-        Queue queue = serviceToQueue.get(service);
-        queue.add(e);
+        ServicePool pool = eventTypeToServicePool.get(eventType);
+        pool.addToNextRobinQueue(e);
 		return future;
 	}
 
-    private MicroService getNextRobinService(List<MicroService> services, String eventType) {
-        synchronized (theSingleton){
-            int index = eventTypeToRobinIndex.get(eventType);
-            eventTypeToRobinIndex.put(eventType, (index + 1) % services.size());
-            return services.get(index);
-        }
-    }
-
     @Override
 	public void register(MicroService m) {
-        serviceToQueue.put(m, new LinkedList());
+        ServicePool pool = serviceTypeToPool.get(m.getClass().getSimpleName());
+        pool.register(m);
 
     }
 
     @Override
     public void unregister(MicroService m) {
-        serviceToQueue.remove(m);
-        List<MicroService> services = serviceTypeToServices.get(m.getClass().getSimpleName());
+        ServicePool pool = serviceTypeToPool.get(m.getClass().getSimpleName());
+        pool.unregister(m);
 
     }
 

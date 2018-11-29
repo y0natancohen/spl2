@@ -7,7 +7,7 @@ package bgu.spl.mics;
  * The message-bus implementation must be thread-safe as
  * it is shared between all the micro-services in the system.
  * You must not alter any of the given methods of this interface. 
- * You cannot add methods to this interface.
+ * You cannot addIfAbcent methods to this interface.
  */
 public interface MessageBus {
 
@@ -54,7 +54,7 @@ public interface MessageBus {
      * fashion. This method should be non-blocking.
      * <p>
      * @param <T>    	The type of the result expected by the event and its corresponding future object.
-     * @param e     	The event to add to the queue.
+     * @param e     	The event to addIfAbcent to the queue.
      * @return {@link Future<T>} object to be resolved once the processing is complete,
      * 	       null in case no micro-service has subscribed to {@code e.getClass()}.
      */

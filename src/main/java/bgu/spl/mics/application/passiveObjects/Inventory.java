@@ -15,7 +15,7 @@ import java.util.*;
  * This class must be implemented safely as a thread-safe singleton.
  * You must not alter any of the given public methods of this class.
  * <p>
- * You can add ONLY private fields and methods to this class as you see fit.
+ * You can addIfAbcent ONLY private fields and methods to this class as you see fit.
  */
 public class Inventory {
 
