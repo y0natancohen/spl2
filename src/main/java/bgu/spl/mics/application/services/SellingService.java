@@ -3,6 +3,8 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MessageBusImpl;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.BookOrderEvent;
+import bgu.spl.mics.application.messages.CheckAvailabilityEvent;
 import bgu.spl.mics.application.passiveObjects.*;
 
 /**
@@ -17,6 +19,8 @@ import bgu.spl.mics.application.passiveObjects.*;
  */
 public class SellingService extends MicroService {
 
+    MessageBusImpl messageBus = MessageBusImpl.getInstance();
+
     public SellingService() {
         super("SellingService");
     }
@@ -24,13 +28,19 @@ public class SellingService extends MicroService {
     @Override
     protected void initialize() {
         MessageBusImpl.getInstance().register(this);
-        subscribeEvent(BookOrderEvent.class, (bookOrderEvent) -> {
-            Future<Integer> future =
-                    MessageBusImpl.getInstance().sendEvent(new CheckAvailabilityEvent<>(bookOrderEvent.getBookName()));
-            //todo:bom - hapes badaf
-            Integer price = future.get();
-        });
+        subscribeEvent(BookOrderEvent.class, this::proccessOrder);
 
+    }
+
+    private void proccessOrder(BookOrderEvent event){
+
+        CheckAvailabilityEvent checkEvent = new CheckAvailabilityEvent<Integer>(event.getBookName());
+        Future<Integer> future = messageBus.sendEvent(checkEvent);
+        //todo:bom - hapes badaf
+        Integer price = future.get();
+        if (price == -1){
+
+        }
     }
 
 }

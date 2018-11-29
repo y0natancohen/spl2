@@ -1,11 +1,9 @@
 package bgu.spl.mics;
 
+import bgu.spl.mics.application.ServicePool;
 import org.apache.commons.collections4.CollectionUtils;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -14,14 +12,18 @@ import java.util.concurrent.ConcurrentHashMap;
  * Only private fields and methods can be added to this class.
  */
 public class MessageBusImpl implements MessageBus {
-    Map<String, List<MicroService>> eventTypeToServices;
-    Map<String, Queue> serviceToQueue;
+    private Map<String, ServicePool> eventTypeToServicePool;
+    private Map<String, ServicePool> broadcastTypeToServicePool;
+
 
     private static MessageBusImpl theSingleton = null;
 
     private MessageBusImpl() {
-        eventTypeToServices = new ConcurrentHashMap<>();
-        serviceToQueue = new ConcurrentHashMap<>();
+        eventTypeToServicePool = new ConcurrentHashMap<>();
+//        serviceTypeToServices = new ConcurrentHashMap<>();
+        broadcastTypeToServicePool = new ConcurrentHashMap<>();
+//        serviceToQueue = new ConcurrentHashMap<>();
+//        eventTypeToRobinIndex = new ConcurrentHashMap<>();
     }
 
     public static MessageBusImpl getInstance() {
@@ -33,51 +35,81 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-        //todo is synch?
-        List<MicroService> microServices = eventTypeToServices.get(type.getSimpleName());
-        if (CollectionUtils.isEmpty(microServices)) {
-            microServices = new LinkedList<>();
-            microServices.add(m);
-        } else {
-            microServices.add(m);
+        //todo is sync?
+
+        ServicePool pool = eventTypeToServicePool.get(type.getSimpleName());
+        if (pool == null) {
+            pool = new ServicePool();
+            eventTypeToServicePool.put(type.getSimpleName(), pool);
         }
-        eventTypeToServices.put(type.getSimpleName(), microServices);
+        pool.add(m);
+
+        eventTypeToServicePool.put(type.getSimpleName(), pool);
+//        serviceTypeToServices.put(m.getClass().getSimpleName(), microServices);
+
+        register(m);
+
     }
 
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-        //todo same as above
+        List<MicroService> microServices = broadcastTypeToServicePool.get(type.getSimpleName());
+        if (CollectionUtils.isEmpty(microServices)) {
+            microServices = new ArrayList<>();
+            microServices.add(m);
+        } else {
+            microServices.add(m);
+        }
+        broadcastTypeToServicePool.put(type.getSimpleName(), microServices);
 
     }
 
     @Override
     public <T> void complete(Event<T> e, T result) {
-        // TODO Auto-generated method stub
+
 
     }
 
     @Override
     public void sendBroadcast(Broadcast b) {
-        // TODO Auto-generated method stub
-
+        String broadcastType = b.getClass().getSimpleName();
+        List<MicroService> services = broadcastTypeToServicePool.get(broadcastType);
+        for (MicroService service: services) {
+            Queue queue = serviceToQueue.get(service);
+            queue.add(b);
+        }
     }
 
 	
 	@Override
 	public <T> Future<T> sendEvent(Event<T> e) {
-		// TODO Auto-generated method stub
-		return null;
+		Future<T> future = new Future<>();
+		String eventType = e.getClass().getSimpleName();
+        List<MicroService> services = eventTypeToServicePool.get(eventType);
+        MicroService service = getNextRobinService(services, eventType);
+        Queue queue = serviceToQueue.get(service);
+        queue.add(e);
+		return future;
 	}
 
-	@Override
+    private MicroService getNextRobinService(List<MicroService> services, String eventType) {
+        synchronized (theSingleton){
+            int index = eventTypeToRobinIndex.get(eventType);
+            eventTypeToRobinIndex.put(eventType, (index + 1) % services.size());
+            return services.get(index);
+        }
+    }
+
+    @Override
 	public void register(MicroService m) {
-		// TODO Auto-generated method stub
+        serviceToQueue.put(m, new LinkedList());
 
     }
 
     @Override
     public void unregister(MicroService m) {
-        // TODO Auto-generated method stub
+        serviceToQueue.remove(m);
+        List<MicroService> services = serviceTypeToServices.get(m.getClass().getSimpleName());
 
     }
 

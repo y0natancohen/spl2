@@ -1,12 +1,11 @@
-package bgu.spl.mics.application.passiveObjects;
+package bgu.spl.mics.application.messages;
 
 import bgu.spl.mics.Event;
 
-public class BookOrderEvent<T> implements Event<T> {
+public class CheckAvailabilityEvent<T> implements Event<T> {
     private String bookName;
 
-
-    public BookOrderEvent(String bookName) {
+    public CheckAvailabilityEvent(String bookName) {
         this.bookName = bookName;
     }
 
