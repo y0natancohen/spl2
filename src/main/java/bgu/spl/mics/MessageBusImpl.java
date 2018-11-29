@@ -94,6 +94,14 @@ public class MessageBusImpl implements MessageBus {
         return future;
     }
 
+    private MicroService getNextRobinService(List<MicroService> services, String eventType) {
+        synchronized (theSingleton){
+            int index = eventTypeToRobinIndex.get(eventType);
+            eventTypeToRobinIndex.put(eventType, (index + 1) % services.size());
+            return services.get(index);
+        }
+    }
+
     @Override
     public void register(MicroService m) {
         // TODO need to find unique identifier for service

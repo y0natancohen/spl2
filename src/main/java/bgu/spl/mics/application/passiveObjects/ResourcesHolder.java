@@ -9,7 +9,7 @@ import bgu.spl.mics.Future;
  * This class must be implemented safely as a thread-safe singleton.
  * You must not alter any of the given public methods of this class.
  * <p>
- * You can add ONLY private methods and fields to this class.
+ * You can addIfAbcent ONLY private methods and fields to this class.
  */
 public class ResourcesHolder {
 	

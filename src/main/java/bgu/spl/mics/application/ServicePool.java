@@ -1,19 +1,15 @@
 package bgu.spl.mics.application;
 
-import bgu.spl.mics.MessageBusImpl;
-import bgu.spl.mics.MicroService;
+import bgu.spl.mics.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ServicePool{
     MessageBusImpl messageBus = MessageBusImpl.getInstance();
     private List<MicroService> services;
+    private Map<MicroService, Queue<Message>> serviceToQueue;
     private int nextServiceToUse = 0;
-    private Map<MicroService, Queue> serviceToQueue;
 
     public ServicePool() {
         this.services = new ArrayList<>();
@@ -21,11 +17,28 @@ public class ServicePool{
 
     }
 
+    public List<MicroService> getServices(){
+        return services;
+    }
+
+    public void addToEveryonesQueue(Broadcast broadcast){
+        for (Queue<Message> queue: serviceToQueue.values()){
+            queue.add(broadcast);
+        }
+    }
+
+    public void addToNextRobinQueue(Event event){
+        MicroService service = getRobinService();
+        Queue<Message> queue = serviceToQueue.get(service);
+        queue.add(event);
+    }
+
     public boolean isEmpty(){
         return services.isEmpty();
     }
 
-    public void add(MicroService service){
+    public void addIfAbcent(MicroService service){
+        if (!services.contains(service))
         this.services.add(service);
     }
 
@@ -40,10 +53,19 @@ public class ServicePool{
 
     public MicroService getRobinService(){
         synchronized (messageBus){
-            MicroService service = services.get(nextServiceToUse);
+            MicroService service = services.get(nextServiceToUse % services.size());
             nextServiceToUse = (nextServiceToUse + 1) % services.size();
             return service;
         }
+    }
+
+    public void register(MicroService service){
+        serviceToQueue.put(service, new LinkedList<>());
+    }
+
+    public void unregister(MicroService service){
+        services.remove(service);
+        serviceToQueue.remove(service);
     }
 
 }

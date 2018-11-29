@@ -6,7 +6,7 @@ import java.util.List;
  * Passive data-object representing a customer of the store.
  * You must not alter any of the given public methods of this class.
  * <p>
- * You may add fields and methods to this class as you see fit (including public methods).
+ * You may addIfAbcent fields and methods to this class as you see fit (including public methods).
  */
 public class Customer {
 

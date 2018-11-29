@@ -4,7 +4,7 @@ package bgu.spl.mics.application.passiveObjects;
  * Passive data-object representing a delivery vehicle of the store.
  * You must not alter any of the given public methods of this class.
  * <p>
- * You may add ONLY private fields and methods to this class.
+ * You may addIfAbcent ONLY private fields and methods to this class.
  */
 public class DeliveryVehicle {
 	/**
