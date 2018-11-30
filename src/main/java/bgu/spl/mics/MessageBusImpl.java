@@ -1,5 +1,6 @@
 package bgu.spl.mics;
 
+import bgu.spl.mics.application.passiveObjects.RotatingQueue;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class MessageBusImpl implements MessageBus {
 
 
-    private Map<Class, List<MicroService>> eventTypeToServices;
+    private Map<Class, RotatingQueue<MicroService>> eventTypeToServices;
     private Map<String, BlockingQueue<Message>> serviceToQueue;
     private Map<Class, List<MicroService>> broadcastToServices;
 
@@ -40,14 +41,14 @@ public class MessageBusImpl implements MessageBus {
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
         //todo is synch?
-        List<MicroService> microServices = eventTypeToServices.get(type.getClass());
-        if (CollectionUtils.isEmpty(microServices)) {
-            microServices = new ArrayList<>();
-            microServices.add(m);
+        RotatingQueue<MicroService> services = eventTypeToServices.get(type.getClass());
+        if (CollectionUtils.isEmpty(services)) {
+            services = new RotatingQueue<>();
+            services.addFirst(m);
         } else {
-            microServices.add(m);
+            services.addFirst(m);
         }
-        eventTypeToServices.put(type.getClass(), microServices);
+        eventTypeToServices.put(type.getClass(), services);
     }
 
     @Override
@@ -85,9 +86,9 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
-        List<MicroService> services = eventTypeToServices.get(e.getClass());
-        // TODO pick service in round robin by event type
-        BlockingQueue<Message> events = serviceToQueue.get(services.get(0));
+        RotatingQueue<MicroService> services = eventTypeToServices.get(e.getClass());
+        MicroService service = services.getAndRotate();
+        BlockingQueue<Message> events = serviceToQueue.get(service);
         try {
             events.put(e);
         } catch (InterruptedException e1) {

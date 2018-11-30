@@ -2,20 +2,14 @@ package bgu.spl.mics.application.passiveObjects;
 
 import java.util.concurrent.ConcurrentLinkedDeque;
 
-public class CircularQueue<T> {
-    private ConcurrentLinkedDeque<T> dQueue;
+public class RotatingQueue<E> extends ConcurrentLinkedDeque<E>{
 
-    public CircularQueue() {
-        this.dQueue = new ConcurrentLinkedDeque<>();
-    }
-
-    public void add(T obj){
-        this.dQueue.addFirst(obj);
-    }
-
-    public T get(){
-        T result = this.dQueue.removeFirst();
-        this.dQueue.addLast(result);
-        return result;
+    public E getAndRotate(){
+        //todo couldnt find a better way then sync... convert to cas maybe?
+        synchronized (this){
+            E result = removeFirst();
+            addLast(result);
+            return result;
+        }
     }
 }
