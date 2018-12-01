@@ -1,14 +1,19 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * TimeService is the global system timer There is only one instance of this micro-service.
  * It keeps track of the amount of ticks passed since initialization and notifies
- * all other micro-services about the current time tick using {@link Tick Broadcast}.
+ * all other micro-services about the current time tick using {@link TickBroadcast Broadcast}.
  * This class may not hold references for objects which it is not responsible for:
  * {@link ResourcesHolder}, {@link MoneyRegister}, {@link Inventory}.
  * <p>
@@ -19,6 +24,8 @@ public class TimeService extends MicroService {
     private static TimeService theSingleton;
     private int speed;
     private int duration;
+    //todo - can be simply int?
+    private final AtomicInteger tickCount = new AtomicInteger(1);
 
     public static TimeService getInstance() {
         if (theSingleton == null) {
@@ -49,8 +56,26 @@ public class TimeService extends MicroService {
 
     @Override
     protected void initialize() {
-        // TODO Implement this
-
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+                           @Override
+                           public void run() {
+                               getTask().run();
+                               timer.schedule(getTask(), speed);
+                           }
+                       }
+                , speed);
     }
 
+    private TimerTask getTask() {
+        return new TimerTask() {
+            @Override
+            public void run() {
+                if (tickCount.get() < duration) {
+                    sendBroadcast(new TickBroadcast(tickCount.getAndIncrement()));
+                }
+                //todo- trigger system termination
+            }
+        };
+    }
 }

@@ -42,6 +42,7 @@ public class BookStoreRunner {
         fireService(LogisticsService::new, gson.fromJson(servicesJsonObj.get("logistics"), Integer.class));
         fireService(ResourceService::new, gson.fromJson(servicesJsonObj.get("resourcesService"), Integer.class));
         List<Customer> customers = getArrayFromJson("customers", Customer.class, servicesJsonObj, gson);
+        customers.forEach(customer -> new Thread(new APIService(customer)).start());
     }
 
     private static void fireService(Runnable runnable, int numberToStart) {
