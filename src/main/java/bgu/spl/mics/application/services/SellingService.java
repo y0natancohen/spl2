@@ -33,7 +33,7 @@ public class SellingService extends MicroService {
 
     public void proccessOrder(BookOrderEvent bookOrderEvent){
         // todo sync parts of this
-        OrderReceipt receipt;
+        OrderReceipt receipt = null;
 
         Integer price = getBookPrice(bookOrderEvent);
         Customer customer = getCustomer(bookOrderEvent.getCustomerId());
@@ -46,9 +46,9 @@ public class SellingService extends MicroService {
                                            bookOrderEvent.getBookName(),
                                            bookOrderEvent.getOrderTick());
                 deliver(customer);
-                complete(bookOrderEvent, receipt);
             }
         }
+        complete(bookOrderEvent, receipt);
     }
 
     private void deliver(Customer customer) {
