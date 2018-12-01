@@ -1,7 +1,5 @@
 package bgu.spl.mics;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 /**
  * A "Marker" interface extending {@link Message}. A micro-service that sends an
  * Event message expects to receive a result of type {@code <T>} when a
@@ -11,10 +9,10 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
  */
 public interface Event<T> extends Message {
     default Future<T> getFuture() {
-        throw new NotImplementedException();
+        return null;
     }
 
     default void setFuture(Future<T> future) {
-        throw new NotImplementedException();
+
     }
 }
