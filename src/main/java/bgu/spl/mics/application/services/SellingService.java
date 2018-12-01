@@ -78,7 +78,7 @@ public class SellingService extends MicroService {
     }
 
     private Customer getCustomer(int customerId) {
-        //todo this
+        //todo where are customers being saved?
         return null;
     }
 

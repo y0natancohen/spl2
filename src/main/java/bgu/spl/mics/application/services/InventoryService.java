@@ -1,6 +1,10 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.CheckAvailabilityEvent;
+import bgu.spl.mics.application.messages.TakeFromInventoryEvent;
+import bgu.spl.mics.application.passiveObjects.Inventory;
+import bgu.spl.mics.application.passiveObjects.OrderResult;
 
 /**
  * InventoryService is in charge of the book inventory and stock.
@@ -14,15 +18,27 @@ import bgu.spl.mics.MicroService;
 
 public class InventoryService extends MicroService{
 
+    private static Inventory inventory = Inventory.getInstance();
+
 	public InventoryService() {
-		super("Change_This_Name");
-		// TODO Implement this
+		super("InventoryService");
 	}
 
 	@Override
 	protected void initialize() {
-		// TODO Implement this
-		
+		subscribeEvent(TakeFromInventoryEvent.class, this::processTake);
+		subscribeEvent(CheckAvailabilityEvent.class, this::precessCheck);
 	}
+
+	private void processTake(TakeFromInventoryEvent takeEvent){
+	    OrderResult orderResult = inventory.take(takeEvent.getBookName());
+	    complete(takeEvent, orderResult);
+    }
+
+
+    private void precessCheck(CheckAvailabilityEvent checkEvent){
+	    Integer price = inventory.checkAvailabiltyAndGetPrice(checkEvent.getBookName());
+	    complete(checkEvent, price);
+    }
 
 }
