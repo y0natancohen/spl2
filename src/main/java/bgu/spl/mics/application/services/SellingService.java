@@ -1,8 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.*;
-import bgu.spl.mics.application.messages.BookOrderEvent;
-import bgu.spl.mics.application.messages.CheckAvailabilityEvent;
+import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.passiveObjects.*;
 
 import java.util.concurrent.TransferQueue;
@@ -25,18 +24,62 @@ public class SellingService extends MicroService {
 
     @Override
     protected void initialize() {
-        MessageBusImpl.getInstance().register(this);
         subscribeEvent(BookOrderEvent.class, this::proccessOrder);
 
     }
 
+
     public void proccessOrder(BookOrderEvent bookOrderEvent){
-        CheckAvailabilityEvent<Integer> checkEvent =  new CheckAvailabilityEvent<>(bookOrderEvent.getBookName());
-        Integer price = sendEvent(checkEvent).get();
+        // todo sync parts of this
+        OrderReceipt receipt = null;
 
+        Integer price = getBookPrice(bookOrderEvent);
+        Customer customer = getCustomer(bookOrderEvent.getCustomerId());
+        Boolean charged = tryCharge(price, customer);
+        if (charged){
+            OrderResult result = tryTake(bookOrderEvent);
+            if (result == OrderResult.SUCCESSFULLY_TAKEN){
+                receipt = new OrderReceipt(
+                        this.getName(),
+                        bookOrderEvent.getCustomerId(),
+                        bookOrderEvent.getBookName(), bookOrderEvent.getOrderTick());
+            }else {
+                reCharge(price, customer);
+            }
+        }
 
-        boolean success = true;
-        complete(bookOrderEvent, success);
+        deliver(customer);
+        complete(bookOrderEvent, receipt);
+    }
+
+    private void deliver(Customer customer) {
+        DeliveryEvent deliveryEvent = new DeliveryEvent(customer.getAddress());
+        sendEvent(deliveryEvent);
+    }
+
+    private void reCharge(Integer price, Customer customer) {
+        ReChargeCreditEvent reChargeEvent = new ReChargeCreditEvent(price, customer.getCreditCard());
+        sendEvent(reChargeEvent);
+    }
+
+    private OrderResult tryTake(BookOrderEvent bookOrderEvent) {
+        TakeFromInventoryEvent takeInvEvent = new TakeFromInventoryEvent(bookOrderEvent.getBookName());
+        return sendEvent(takeInvEvent).get();
+    }
+
+    private Boolean tryCharge(Integer price, Customer customer) {
+        ChargeCreditEvent chargeEvent = new ChargeCreditEvent(price, customer.getCreditCard());
+        return sendEvent(chargeEvent).get();
+    }
+
+    private Integer getBookPrice(BookOrderEvent bookOrderEvent) {
+        CheckAvailabilityEvent checkAvbEvent =  new CheckAvailabilityEvent(bookOrderEvent.getBookName());
+        return sendEvent(checkAvbEvent).get();
+    }
+
+    private Customer getCustomer(int customerId) {
+        //todo this
+        return null;
     }
 
 }

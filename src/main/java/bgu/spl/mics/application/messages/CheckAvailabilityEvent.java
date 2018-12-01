@@ -4,7 +4,7 @@ import bgu.spl.mics.Event;
 
 import java.util.Objects;
 
-public class CheckAvailabilityEvent<T> implements Event<T> {
+public class CheckAvailabilityEvent implements Event<Integer> {
     private String bookName;
 
     public CheckAvailabilityEvent(String bookName) {
@@ -19,7 +19,7 @@ public class CheckAvailabilityEvent<T> implements Event<T> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        CheckAvailabilityEvent<?> that = (CheckAvailabilityEvent<?>) o;
+        CheckAvailabilityEvent that = (CheckAvailabilityEvent) o;
         return Objects.equals(bookName, that.bookName);
     }
 

@@ -21,7 +21,7 @@ public class Customer {
 	private CreditCard creditCard;
 
     public CreditCard getCreditCard() {
-        return creditCard;
+        return this.creditCard;
     }
 
     public Customer(int id, String name, String address, int distance, CreditCard creditCard) {

@@ -48,7 +48,6 @@ public class OrderReceipt {
      * @return the ID of the customer
      */
 	public int getCustomerId() {
-		// TODO elad: what does the <p> mean in this func description?
 		return customerId;
 	}
 	

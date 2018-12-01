@@ -1,9 +1,11 @@
 package bgu.spl.mics.application.messages;
 
-public class TakeBookEvent extends BaseEvent {
+import bgu.spl.mics.application.passiveObjects.OrderResult;
+
+public class TakeFromInventoryEvent extends BaseEvent<OrderResult>{
     private String bookName;
 
-    public TakeBookEvent(String bookName) {
+    public TakeFromInventoryEvent(String bookName) {
         this.bookName = bookName;
     }
 

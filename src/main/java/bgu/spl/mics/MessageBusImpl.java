@@ -101,7 +101,6 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void register(MicroService m) {
-        // TODO need to find unique identifier for service
         serviceToQueue.put(m.getName(), new LinkedBlockingQueue<>());
     }
 
