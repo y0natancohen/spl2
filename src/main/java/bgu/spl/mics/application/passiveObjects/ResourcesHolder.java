@@ -45,7 +45,8 @@ public class ResourcesHolder {
      * 			{@link DeliveryVehicle} when completed.   
      */
 	public Future<DeliveryVehicle> acquireVehicle() {
-		Future<DeliveryVehicle> future = new Future<>();
+		//todo elad and jony think wtf is here
+	    Future<DeliveryVehicle> future = new Future<>();
 		return null;
 	}
 	
