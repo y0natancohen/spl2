@@ -19,7 +19,6 @@ public class LogisticsService extends MicroService {
 
 	public LogisticsService() {
 		super("LogisticsService");
-		// TODO Implement this
 	}
 
 	@Override

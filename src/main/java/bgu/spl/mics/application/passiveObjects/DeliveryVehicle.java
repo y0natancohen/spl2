@@ -46,6 +46,11 @@ public class DeliveryVehicle {
      * @param distance	The distance from the store to the customer.
      */
 	public void deliver(String address, int distance) {
-		// TODO Implement this
-	}
+        int t = distance / this.speed;
+	    try {
+            Thread.sleep(t);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 }

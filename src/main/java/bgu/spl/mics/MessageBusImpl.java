@@ -3,9 +3,7 @@ package bgu.spl.mics;
 import bgu.spl.mics.application.passiveObjects.RotatingQueue;
 import org.apache.commons.collections4.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -107,7 +105,24 @@ public class MessageBusImpl implements MessageBus {
     @Override
     public void unregister(MicroService m) {
         serviceToQueue.remove(m.getName());
-        // todo clear from subscription
+        removeFromValues(eventTypeToServices,m);
+        removeFromValues(broadcastToServices,m);
+    }
+
+    private void removeFromValues(Map<Class, ? extends Collection> map, MicroService m) {
+        Iterator it = map.entrySet().iterator();
+        while (it.hasNext() ) {
+            Map.Entry pair = (Map.Entry)it.next();
+            Collection<MicroService> services = (Collection) pair.getValue();
+            for (MicroService service: services){
+                if (service == m){
+                    services.remove(service);
+                    break;
+                }
+
+            }
+            it.remove(); // avoids a ConcurrentModificationException
+        }
     }
 
     @Override

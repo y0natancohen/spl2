@@ -3,10 +3,9 @@ package bgu.spl.mics.application.passiveObjects;
 import bgu.spl.mics.Future;
 
 import java.util.Arrays;
-import java.util.Map;
-import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Passive object representing the resource manager.
@@ -23,11 +22,10 @@ public class ResourcesHolder {
      * Retrieves the single instance of this class.
      */
 	private static ResourcesHolder theSingleton = null;
-	private Queue<DeliveryVehicle> vehicles;
-	private Map<DeliveryVehicle, AtomicBoolean> vehicleToUsed;
+	private DeliveryVehicle[] vehicles;
+	private BlockingQueue<DeliveryVehicle> availableVehicles;
 
 	private ResourcesHolder() {
-	    this.vehicles = new ConcurrentLinkedDeque<>();
     }
 
 	public static ResourcesHolder getInstance(){
@@ -45,10 +43,16 @@ public class ResourcesHolder {
      * 			{@link DeliveryVehicle} when completed.   
      */
 	public Future<DeliveryVehicle> acquireVehicle() {
-		//todo elad and jony think wtf is here
 	    Future<DeliveryVehicle> future = new Future<>();
-		return null;
-	}
+        try {
+            DeliveryVehicle vehicle = availableVehicles.take();
+            // todo the waiting happens here and not in future.get()... ok?
+            future.resolve(vehicle);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return future;
+    }
 	
 	/**
      * Releases a specified vehicle, opening it again for the possibility of
@@ -57,16 +61,17 @@ public class ResourcesHolder {
      * @param vehicle	{@link DeliveryVehicle} to be released.
      */
 	public void releaseVehicle(DeliveryVehicle vehicle) {
-		//TODO: Implement this
+		availableVehicles.add(vehicle);
 	}
 	
 	/**
-     * Receives a collection of vehicles and stores them.
+     * Receives a collection of availableVehicles and stores them.
      * <p>
      * @param vehicles	Array of {@link DeliveryVehicle} instances to store.
      */
 	public void load(DeliveryVehicle[] vehicles) {
-		this.vehicles = new ConcurrentLinkedDeque<>(Arrays.asList(vehicles));
+	    this.vehicles = vehicles;
+		this.availableVehicles = new LinkedBlockingQueue<>(Arrays.asList(vehicles));
 	}
 
 }
