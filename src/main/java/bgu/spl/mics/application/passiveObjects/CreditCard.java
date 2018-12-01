@@ -1,12 +1,14 @@
 package bgu.spl.mics.application.passiveObjects;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class CreditCard {
-    private int number;
-    private int  amount;
+    private final int number;
+    private AtomicInteger amount;
 
     public CreditCard(int number, int amount) {
         this.number = number;
-        this.amount = amount;
+        this.amount = new AtomicInteger(amount);
     }
 
     public int getNumber() {
@@ -14,12 +16,11 @@ public class CreditCard {
     }
 
     public int getAmount() {
-        return amount;
+        return amount.get();
     }
 
     public void charge(int howMuch) {
-        // TODO: sync here
-        // TODO: what if we dont have money?
-        this.amount = amount - howMuch;
+        //todo is this safe? research
+        this.amount.addAndGet( - howMuch);
     }
 }

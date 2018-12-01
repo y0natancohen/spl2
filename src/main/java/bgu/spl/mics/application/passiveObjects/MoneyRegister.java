@@ -2,6 +2,10 @@ package bgu.spl.mics.application.passiveObjects;
 
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Passive object representing the store finance management. 
@@ -18,12 +22,16 @@ public class MoneyRegister {
      * Retrieves the single instance of this class.
      */
 
+	AtomicInteger total;
     private static MoneyRegister theSingleton = null;
-	private static ArrayList<OrderReceipt> orderReceipts;
+	private static Queue<OrderReceipt> orderReceipts;
 
-	private MoneyRegister(){}
+	private MoneyRegister(){
+		orderReceipts = new ConcurrentLinkedDeque<>();
+		total = new AtomicInteger(0);
+	}
 
-	public static MoneyRegister getInstance(){
+	public static synchronized MoneyRegister getInstance(){
 		if (MoneyRegister.theSingleton == null){
 			MoneyRegister.theSingleton = new MoneyRegister();
 		}
@@ -36,21 +44,16 @@ public class MoneyRegister {
      * @param r		The receipt to save in the money register.
      */
 	public void file (OrderReceipt r) {
-		// TODO: sync here
+	    // todo sync here?
 		orderReceipts.add(r);
+		total.addAndGet(r.getPrice());
 	}
 	
 	/**
      * Retrieves the current total earnings of the store.  
      */
 	public int getTotalEarnings() {
-	    int sum = 0;
-        for (OrderReceipt orderReceipt :
-                orderReceipts) {
-            // TODO: if statment here? maybe not sum all orders
-            sum += orderReceipt.getPrice();
-        }
-		return sum;
+		return total.get();
 	}
 	
 	/**
@@ -59,7 +62,7 @@ public class MoneyRegister {
      * @param amount 	amount to charge
      */
 	public void chargeCreditCard(Customer c, int amount) {
-		// TODO: sync here
+		// TODO: sync here?
         CreditCard card = c.getCreditCard();
         card.charge(amount);
 	}

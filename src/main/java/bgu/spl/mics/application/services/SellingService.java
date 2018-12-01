@@ -18,6 +18,8 @@ import java.util.concurrent.TransferQueue;
  */
 public class SellingService extends MicroService {
 
+    private MoneyRegister register = MoneyRegister.getInstance();
+
     public SellingService() {
         super("SellingService");
     }
@@ -31,45 +33,32 @@ public class SellingService extends MicroService {
 
     public void proccessOrder(BookOrderEvent bookOrderEvent){
         // todo sync parts of this
-        OrderReceipt receipt = null;
+        OrderReceipt receipt;
 
         Integer price = getBookPrice(bookOrderEvent);
         Customer customer = getCustomer(bookOrderEvent.getCustomerId());
-        Boolean charged = tryCharge(price, customer);
-        if (charged){
+        if (price != -1){
             OrderResult result = tryTake(bookOrderEvent);
             if (result == OrderResult.SUCCESSFULLY_TAKEN){
-                receipt = new OrderReceipt(
-                        this.getName(),
-                        bookOrderEvent.getCustomerId(),
-                        bookOrderEvent.getBookName(), bookOrderEvent.getOrderTick());
-            }else {
-                reCharge(price, customer);
+                register.chargeCreditCard(customer, price);
+                receipt = new OrderReceipt(this.getName(),
+                                           bookOrderEvent.getCustomerId(),
+                                           bookOrderEvent.getBookName(),
+                                           bookOrderEvent.getOrderTick());
+                deliver(customer);
+                complete(bookOrderEvent, receipt);
             }
         }
-
-        deliver(customer);
-        complete(bookOrderEvent, receipt);
     }
 
     private void deliver(Customer customer) {
-        DeliveryEvent deliveryEvent = new DeliveryEvent(customer.getAddress());
+        DeliveryEvent deliveryEvent = new DeliveryEvent(customer.getAddress(), customer.getDistance());
         sendEvent(deliveryEvent);
-    }
-
-    private void reCharge(Integer price, Customer customer) {
-        ReChargeCreditEvent reChargeEvent = new ReChargeCreditEvent(price, customer.getCreditCard());
-        sendEvent(reChargeEvent);
     }
 
     private OrderResult tryTake(BookOrderEvent bookOrderEvent) {
         TakeFromInventoryEvent takeInvEvent = new TakeFromInventoryEvent(bookOrderEvent.getBookName());
         return sendEvent(takeInvEvent).get();
-    }
-
-    private Boolean tryCharge(Integer price, Customer customer) {
-        ChargeCreditEvent chargeEvent = new ChargeCreditEvent(price, customer.getCreditCard());
-        return sendEvent(chargeEvent).get();
     }
 
     private Integer getBookPrice(BookOrderEvent bookOrderEvent) {

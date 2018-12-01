@@ -2,6 +2,12 @@ package bgu.spl.mics.application.passiveObjects;
 
 import bgu.spl.mics.Future;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * Passive object representing the resource manager.
  * You must not alter any of the given public methods of this class.
@@ -17,8 +23,12 @@ public class ResourcesHolder {
      * Retrieves the single instance of this class.
      */
 	private static ResourcesHolder theSingleton = null;
+	private Queue<DeliveryVehicle> vehicles;
+	private Map<DeliveryVehicle, AtomicBoolean> vehicleToUsed;
 
-	private ResourcesHolder() {}
+	private ResourcesHolder() {
+	    this.vehicles = new ConcurrentLinkedDeque<>();
+    }
 
 	public static ResourcesHolder getInstance(){
 		if (ResourcesHolder.theSingleton == null){
@@ -35,7 +45,7 @@ public class ResourcesHolder {
      * 			{@link DeliveryVehicle} when completed.   
      */
 	public Future<DeliveryVehicle> acquireVehicle() {
-		//TODO: Implement this
+		Future<DeliveryVehicle> future = new Future<>();
 		return null;
 	}
 	
@@ -55,7 +65,7 @@ public class ResourcesHolder {
      * @param vehicles	Array of {@link DeliveryVehicle} instances to store.
      */
 	public void load(DeliveryVehicle[] vehicles) {
-		//TODO: Implement this
+		this.vehicles = new ConcurrentLinkedDeque<>(Arrays.asList(vehicles));
 	}
 
 }

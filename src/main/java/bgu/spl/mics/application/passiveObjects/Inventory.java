@@ -6,6 +6,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.*;
+import java.util.concurrent.*;
+
 
 /**
  * Passive data-object representing the store inventory.
@@ -29,12 +31,12 @@ public class Inventory {
      */
 
 
-    private List<BookInventoryInfo> bookInventoryInfos;
+    private Queue<BookInventoryInfo> bookInventoryInfos;
 
     private final static Inventory theSingleton = new Inventory();
 
     private Inventory() {
-        bookInventoryInfos = new ArrayList<>();
+        bookInventoryInfos = new ConcurrentLinkedDeque<>();
     }
 
     public static Inventory getInstance() {
@@ -50,7 +52,7 @@ public class Inventory {
      *                  of the inventory.
      */
     public void load(BookInventoryInfo[] inventory) {
-        bookInventoryInfos = new ArrayList<>(Arrays.asList(inventory));
+        bookInventoryInfos = new ConcurrentLinkedDeque<>(Arrays.asList(inventory));
     }
 
     /**
