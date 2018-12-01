@@ -1,7 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.messages.AquireVehicleEvent;
+import bgu.spl.mics.application.messages.AcquireVehicleEvent;
 import bgu.spl.mics.application.messages.ReleaseVehicleEvent;
 import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
@@ -24,7 +24,7 @@ public class ResourceService extends MicroService{
 
 	@Override
 	protected void initialize() {
-	    subscribeEvent(AquireVehicleEvent.class, this::aquire);
+	    subscribeEvent(AcquireVehicleEvent.class, this::aquire);
 	    subscribeEvent(ReleaseVehicleEvent.class, this::release);
 	}
 
@@ -33,7 +33,7 @@ public class ResourceService extends MicroService{
 	    complete(releaseEvent, true);
     }
 
-    private void aquire(AquireVehicleEvent aquireEvent){
+    private void aquire(AcquireVehicleEvent aquireEvent){
 	     DeliveryVehicle vehicle = resources.acquireVehicle().get();
 	     complete(aquireEvent, vehicle);
     }
