@@ -19,6 +19,7 @@ public class Customer {
 	private String address;
 	private int distance;
 	private CreditCard creditCard;
+	private List<OrderSchedule> orderSchedule;
 
     public CreditCard getCreditCard() {
         return this.creditCard;
@@ -31,6 +32,14 @@ public class Customer {
         this.address = address;
         this.distance = distance;
         this.creditCard = creditCard;
+    }
+
+    public List<OrderSchedule> getOrderSchedule() {
+        return orderSchedule;
+    }
+
+    public void setOrderSchedule(List<OrderSchedule> orderSchedule) {
+        this.orderSchedule = orderSchedule;
     }
 
     public String getName() {
