@@ -1,10 +1,10 @@
-package bgu.spl.mics.application.passiveObjects;
-
+import bgu.spl.mics.application.passiveObjects.BookInventoryInfo;
+import bgu.spl.mics.application.passiveObjects.Inventory;
+import bgu.spl.mics.application.passiveObjects.OrderResult;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
@@ -12,10 +12,9 @@ import static org.junit.Assert.assertSame;
 public class InventoryTest {
     public Inventory inventory;
     public BookInventoryInfo[] bookInventoryInfos;
-    public File tempFile;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         Inventory inst = Inventory.getInstance();
         inventory = inst;
 

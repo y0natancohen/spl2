@@ -1,8 +1,6 @@
 package bgu.spl.mics.application.messages;
 
-import bgu.spl.mics.Event;
-
-public class BookOrderEvent<T> implements Event<T> {
+public class BookOrderEvent<T> extends BaseEvent<T> {
     private String bookName;
 
 

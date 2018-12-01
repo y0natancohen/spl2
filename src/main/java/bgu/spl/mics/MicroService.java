@@ -22,7 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>
  */
 public abstract class MicroService implements Runnable {
-    private Map<Class, Callback<Message>> eventToCallback;
+    private Map<Class, Callback> eventToCallback;
+    private Map<Class, Callback> broadcastToCallback;
     private MessageBus messageBus = MessageBusImpl.getInstance();
 
     private boolean terminated = false;
@@ -35,6 +36,7 @@ public abstract class MicroService implements Runnable {
     public MicroService(String name) {
         this.name = name;
         this.eventToCallback = new ConcurrentHashMap<>();
+        this.broadcastToCallback = new ConcurrentHashMap<>();
     }
 
     /**
@@ -60,7 +62,7 @@ public abstract class MicroService implements Runnable {
      *                 queue.
      */
     protected final <T, E extends Event<T>> void subscribeEvent(Class<E> type, Callback<E> callback) {
-        //TODO: implement this.
+        eventToCallback.put(type, callback);
     }
 
     /**
@@ -85,7 +87,7 @@ public abstract class MicroService implements Runnable {
      *                 queue.
      */
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
-        //TODO: implement this.
+        broadcastToCallback.put(type, callback);
     }
 
     /**
@@ -102,8 +104,7 @@ public abstract class MicroService implements Runnable {
      * null in case no micro-service has subscribed to {@code e.getClass()}.
      */
     protected final <T> Future<T> sendEvent(Event<T> e) {
-        //TODO: implement this.
-        return null; //TODO: delete this line :)
+        return messageBus.sendEvent(e);
     }
 
     /**
@@ -114,7 +115,7 @@ public abstract class MicroService implements Runnable {
      * @param b The broadcast message to send
      */
     protected final void sendBroadcast(Broadcast b) {
-        //TODO: implement this.
+        messageBus.sendBroadcast(b);
     }
 
     /**
@@ -129,7 +130,7 @@ public abstract class MicroService implements Runnable {
      *               {@code e}.
      */
     protected final <T> void complete(Event<T> e, T result) {
-        //TODO: implement this.
+        e.getFuture().resolve(result);
     }
 
     /**
@@ -163,7 +164,11 @@ public abstract class MicroService implements Runnable {
         while (!terminated) {
             try {
                 Message message = messageBus.awaitMessage(this);
-                eventToCallback.get(message.getClass()).call(message);
+                if (eventToCallback.get(message.getClass()) == null){
+                    eventToCallback.get(message.getClass()).call(message);
+                }else {
+                    broadcastToCallback.get(message.getClass()).call(message);
+                }
             } catch (InterruptedException e) {
                 System.out.println("Service " + getName() + " failed to get new message to handle");
             }

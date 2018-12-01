@@ -1,5 +1,4 @@
-package bgu.spl.mics;
-
+import bgu.spl.mics.Future;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
