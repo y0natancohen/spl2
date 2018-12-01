@@ -1,6 +1,9 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.passiveObjects.Inventory;
+import bgu.spl.mics.application.passiveObjects.MoneyRegister;
+import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
 /**
  * TimeService is the global system timer There is only one instance of this micro-service.
@@ -8,50 +11,46 @@ import bgu.spl.mics.MicroService;
  * all other micro-services about the current time tick using {@link Tick Broadcast}.
  * This class may not hold references for objects which it is not responsible for:
  * {@link ResourcesHolder}, {@link MoneyRegister}, {@link Inventory}.
- * 
+ * <p>
  * You can addIfAbcent private fields and public methods to this class.
  * You MAY change constructor signatures and even addIfAbcent new public constructors.
  */
-public class TimeService extends MicroService{
-	private static TimeService theSingleton = null;
-	private static int speed;
-	private static int duration;
+public class TimeService extends MicroService {
+    private static TimeService theSingleton;
+    private int speed;
+    private int duration;
 
-	public static TimeService getInstance(){
-		if (TimeService.theSingleton == null){
-			TimeService.theSingleton = new TimeService();
-		}
-		return TimeService.theSingleton;
-	}
+    public static TimeService getInstance() {
+        if (theSingleton == null) {
+            theSingleton = new TimeService();
+        }
+        return theSingleton;
+    }
 
+    private TimeService() {
+        super("Change_This_Name");
+    }
 
-	// TODO: public is their signature here
-    // TODO: how to prevent from creating another one?
-	public TimeService() {
-		super("Change_This_Name");
-		// TODO Implement this
-	}
-
-    public static int getSpeed() {
+    public int getSpeed() {
         return speed;
     }
 
-    public static void setSpeed(int speed) {
-        TimeService.speed = speed;
+    public void setSpeed(int speed) {
+        this.speed = speed;
     }
 
-    public static int getDuration() {
+    public int getDuration() {
         return duration;
     }
 
-    public static void setDuration(int duration) {
-        TimeService.duration = duration;
+    public void setDuration(int duration) {
+        this.duration = duration;
     }
 
     @Override
-	protected void initialize() {
-		// TODO Implement this
-		
-	}
+    protected void initialize() {
+        // TODO Implement this
+
+    }
 
 }
