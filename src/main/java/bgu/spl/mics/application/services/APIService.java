@@ -21,8 +21,8 @@ public class APIService extends MicroService {
     private Customer customer;
 
     public APIService() {
-        super("Change_This_Name");
-        // TODO Implement this
+        super("APIService");
+
     }
 
     public APIService(Customer customer) {
@@ -32,12 +32,10 @@ public class APIService extends MicroService {
 
     @Override
     protected void initialize() {
-        subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
-            customer.getOrderSchedule().stream()
-                    .filter(orderSchedule -> orderSchedule.getTick() == tickBroadcast.getCurrentTick())
-                    .forEach(relevantOrder ->
-                            sendEvent(new BookOrderEvent<>
-                                    (relevantOrder.getBookTitle(), customer.getId(), relevantOrder.getTick())));
-        });
+        subscribeBroadcast(TickBroadcast.class, tickBroadcast -> customer.getOrderSchedule().stream()
+                .filter(orderSchedule -> orderSchedule.getTick() == tickBroadcast.getCurrentTick())
+                .forEach(relevantOrder ->
+                        sendEvent(new BookOrderEvent
+                                (relevantOrder.getBookTitle(), customer, relevantOrder.getTick()))));
     }
 }

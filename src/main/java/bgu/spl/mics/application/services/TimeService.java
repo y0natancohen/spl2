@@ -8,7 +8,6 @@ import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * TimeService is the global system timer There is only one instance of this micro-service.
@@ -24,9 +23,10 @@ public class TimeService extends MicroService {
     private static TimeService theSingleton;
     private int speed;
     private int duration;
-    //todo - can be simply int?
-    private final AtomicInteger tickCount = new AtomicInteger(1);
+    private int tickCount = 1;
 
+
+    //todo:elad write thread-safe singleton
     public static TimeService getInstance() {
         if (theSingleton == null) {
             theSingleton = new TimeService();
@@ -35,47 +35,22 @@ public class TimeService extends MicroService {
     }
 
     private TimeService() {
-        super("Change_This_Name");
-    }
-
-    public int getSpeed() {
-        return speed;
-    }
-
-    public void setSpeed(int speed) {
-        this.speed = speed;
-    }
-
-    public int getDuration() {
-        return duration;
-    }
-
-    public void setDuration(int duration) {
-        this.duration = duration;
+        super("TimeService");
     }
 
     @Override
     protected void initialize() {
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-                           @Override
-                           public void run() {
-                               getTask().run();
-                               timer.schedule(getTask(), speed);
-                           }
-                       }
-                , speed);
-    }
-
-    private TimerTask getTask() {
-        return new TimerTask() {
-            @Override
+        TimerTask repeatedTask = new TimerTask() {
             public void run() {
-                if (tickCount.get() < duration) {
-                    sendBroadcast(new TickBroadcast(tickCount.getAndIncrement()));
+                if (tickCount < duration) {
+                    tickCount = tickCount++;
+                    System.out.println("sending tick" + tickCount);
+                    sendBroadcast(new TickBroadcast(tickCount));
                 }
-                //todo- trigger system termination
+                terminate();
             }
         };
+        Timer timer = new Timer("Timer");
+        timer.scheduleAtFixedRate(repeatedTask, 0, speed);
     }
 }

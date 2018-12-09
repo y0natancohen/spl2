@@ -2,7 +2,6 @@ package bgu.spl.mics;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The MicroService is an abstract class that any micro-service in the system
@@ -27,8 +26,6 @@ public abstract class MicroService implements Runnable {
     private Map<Class, Callback> broadcastToCallback;
     private MessageBus messageBus = MessageBusImpl.getInstance();
 
-//    protected static AtomicInteger instanceCounter = new AtomicInteger(0);
-
     private boolean terminated = false;
     private final String name;
 
@@ -40,6 +37,7 @@ public abstract class MicroService implements Runnable {
         this.name = name + Thread.currentThread().getId();
         this.eventToCallback = new ConcurrentHashMap<>();
         this.broadcastToCallback = new ConcurrentHashMap<>();
+        messageBus.register(this);
     }
 
     /**
@@ -66,6 +64,7 @@ public abstract class MicroService implements Runnable {
      */
     protected final <T, E extends Event<T>> void subscribeEvent(Class<E> type, Callback<E> callback) {
         eventToCallback.put(type, callback);
+        messageBus.subscribeEvent(type, this);
     }
 
     /**
@@ -91,6 +90,7 @@ public abstract class MicroService implements Runnable {
      */
     protected final <B extends Broadcast> void subscribeBroadcast(Class<B> type, Callback<B> callback) {
         broadcastToCallback.put(type, callback);
+        messageBus.subscribeBroadcast(type, this);
     }
 
     /**
@@ -163,20 +163,21 @@ public abstract class MicroService implements Runnable {
      */
     @Override
     public final void run() {
-        messageBus.register(this);
+        System.out.println(getName() + " is initializing...");
         initialize();
         while (!terminated) {
             try {
                 Message message = messageBus.awaitMessage(this);
-                if (eventToCallback.get(message.getClass()) == null){
+                if (message instanceof Event) {
                     eventToCallback.get(message.getClass()).call(message);
-                }else {
+                } else if (message instanceof Broadcast) {
                     broadcastToCallback.get(message.getClass()).call(message);
                 }
             } catch (InterruptedException e) {
-                System.out.println("Service " + getName() + " failed to get new message to handle");
+                terminated = true;
             }
         }
+        messageBus.unregister(this);
     }
 
 }

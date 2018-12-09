@@ -4,8 +4,6 @@ import bgu.spl.mics.*;
 import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.passiveObjects.*;
 
-import java.util.concurrent.TransferQueue;
-
 /**
  * Selling service in charge of taking orders from customers.
  * Holds a reference to the {@link MoneyRegister} singleton of the store.
@@ -27,24 +25,24 @@ public class SellingService extends MicroService {
     @Override
     protected void initialize() {
         subscribeEvent(BookOrderEvent.class, this::proccessOrder);
-
     }
 
 
-    public void proccessOrder(BookOrderEvent bookOrderEvent){
+    public void proccessOrder(BookOrderEvent bookOrderEvent) {
         // todo sync parts of this
         OrderReceipt receipt = null;
 
         Integer price = getBookPrice(bookOrderEvent);
-        Customer customer = getCustomer(bookOrderEvent.getCustomerId());
-        if (price != -1){
+        //todo:elad - put whole customer on bookOrderEvent
+        Customer customer = bookOrderEvent.getCustomer();
+        if (price != -1) {
             OrderResult result = tryTake(bookOrderEvent);
-            if (result == OrderResult.SUCCESSFULLY_TAKEN){
+            if (result == OrderResult.SUCCESSFULLY_TAKEN) {
                 register.chargeCreditCard(customer, price);
                 receipt = new OrderReceipt(this.getName(),
-                                           bookOrderEvent.getCustomerId(),
-                                           bookOrderEvent.getBookName(),
-                                           bookOrderEvent.getOrderTick());
+                        customer.getId(),
+                        bookOrderEvent.getBookName(),
+                        bookOrderEvent.getOrderTick());
                 deliver(customer);
             }
         }
@@ -62,13 +60,8 @@ public class SellingService extends MicroService {
     }
 
     private Integer getBookPrice(BookOrderEvent bookOrderEvent) {
-        CheckAvailabilityEvent checkAvbEvent =  new CheckAvailabilityEvent(bookOrderEvent.getBookName());
+        CheckAvailabilityEvent checkAvbEvent = new CheckAvailabilityEvent(bookOrderEvent.getBookName());
         return sendEvent(checkAvbEvent).get();
-    }
-
-    private Customer getCustomer(int customerId) {
-        //todo where are customers being saved?
-        return null;
     }
 
 }

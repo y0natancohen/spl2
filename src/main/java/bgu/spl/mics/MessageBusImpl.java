@@ -18,7 +18,7 @@ public class MessageBusImpl implements MessageBus {
 
     private Map<Class, RotatingQueue<MicroService>> eventTypeToServices;
     private Map<String, BlockingQueue<Message>> serviceToQueue;
-    private Map<Class, List<MicroService>> broadcastToServices;
+    private Map<Class, RotatingQueue<MicroService>> broadcastToServices;
 
 
     private static MessageBusImpl theSingleton = null;
@@ -39,26 +39,26 @@ public class MessageBusImpl implements MessageBus {
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
         //todo is synch?
-        RotatingQueue<MicroService> services = eventTypeToServices.get(type.getClass());
+        RotatingQueue<MicroService> services = eventTypeToServices.get(type);
         if (CollectionUtils.isEmpty(services)) {
             services = new RotatingQueue<>();
             services.addFirst(m);
         } else {
             services.addFirst(m);
         }
-        eventTypeToServices.put(type.getClass(), services);
+        eventTypeToServices.put(type, services);
     }
 
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-        List<MicroService> microServices = broadcastToServices.get(type.getClass());
+        RotatingQueue<MicroService> microServices = broadcastToServices.get(type);
         if (CollectionUtils.isEmpty(microServices)) {
-            microServices = new ArrayList<>();
-            microServices.add(m);
+            microServices = new RotatingQueue<>();
+            microServices.addFirst(m);
         } else {
-            microServices.add(m);
+            microServices.addFirst(m);
         }
-        broadcastToServices.put(type.getClass(), microServices);
+        broadcastToServices.put(type, microServices);
     }
 
     @Override
@@ -71,7 +71,7 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void sendBroadcast(Broadcast b) {
-        broadcastToServices.get(b).forEach(microService -> {
+        broadcastToServices.get(b.getClass()).forEach(microService -> {
             BlockingQueue<Message> currentQ = serviceToQueue.get(microService.getName());
             try {
                 currentQ.put(b);
@@ -86,7 +86,7 @@ public class MessageBusImpl implements MessageBus {
     public <T> Future<T> sendEvent(Event<T> e) {
         RotatingQueue<MicroService> services = eventTypeToServices.get(e.getClass());
         MicroService service = services.getAndRotate();
-        BlockingQueue<Message> events = serviceToQueue.get(service);
+        BlockingQueue<Message> events = serviceToQueue.get(service.getName());
         try {
             events.put(e);
         } catch (InterruptedException e1) {

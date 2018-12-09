@@ -1,10 +1,8 @@
 package bgu.spl.mics.application.messages;
 
-import bgu.spl.mics.Event;
-
 import java.util.Objects;
 
-public class CheckAvailabilityEvent implements Event<Integer> {
+public class CheckAvailabilityEvent extends BaseEvent<Integer> {
     private String bookName;
 
     public CheckAvailabilityEvent(String bookName) {

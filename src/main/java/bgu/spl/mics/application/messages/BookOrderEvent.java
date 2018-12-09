@@ -1,27 +1,48 @@
 package bgu.spl.mics.application.messages;
 
-public class BookOrderEvent<T> extends BaseEvent<T> {
+import bgu.spl.mics.application.passiveObjects.Customer;
+import bgu.spl.mics.application.passiveObjects.OrderReceipt;
+
+import java.util.Objects;
+
+public class BookOrderEvent extends BaseEvent<OrderReceipt> {
     private String bookName;
-    private int customerId;
+    private Customer customer;
     private int orderTick;
 
-    public int getCustomerId() {
-        return customerId;
+    public Customer getCustomer() {
+        return customer;
     }
 
     public int getOrderTick() {
         return orderTick;
     }
 
-    public BookOrderEvent(String bookName, int customerId, int orderTick) {
+    public BookOrderEvent(String bookName, Customer customer, int orderTick) {
 
         this.bookName = bookName;
-
-        this.customerId = customerId;
+        this.customer = customer;
         this.orderTick = orderTick;
     }
 
     public String getBookName() {
         return bookName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+        BookOrderEvent that = (BookOrderEvent) o;
+        return orderTick == that.orderTick &&
+                Objects.equals(bookName, that.bookName) &&
+                Objects.equals(customer, that.customer);
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(super.hashCode(), bookName, customer, orderTick);
     }
 }
