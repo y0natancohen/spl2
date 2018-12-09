@@ -50,7 +50,7 @@ public class DeliveryVehicle {
         try {
             Thread.sleep(t);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            System.out.println(String.format("vehicle with license: %d was interrupted... keep driving", license));
         }
     }
 }

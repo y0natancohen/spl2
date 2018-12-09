@@ -27,10 +27,10 @@ public class MessageBusImpl implements MessageBus {
         broadcastToServices = new ConcurrentHashMap<>();
     }
     private static class SingletonHolder {
-        private static MessageBus instance = new MessageBusImpl();
+        private static MessageBusImpl instance = new MessageBusImpl();
     }
 
-    public static MessageBus getInstance() {
+    public static MessageBusImpl getInstance() {
         return SingletonHolder.instance;
     }
 

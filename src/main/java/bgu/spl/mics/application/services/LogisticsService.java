@@ -35,5 +35,4 @@ public class LogisticsService extends MicroService {
 		sendEvent(new ReleaseVehicleEvent(vehicle));
 		complete(deliveryEvent, true);
 	}
-
 }
