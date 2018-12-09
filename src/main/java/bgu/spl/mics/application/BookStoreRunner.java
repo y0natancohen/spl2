@@ -26,8 +26,7 @@ public class BookStoreRunner {
             System.out.println("could not read config file");
         }
         Gson gson = new Gson();
-        JsonElement jelement = new JsonParser().parse(content);
-        JsonObject allJsonObj = jelement.getAsJsonObject();
+        JsonObject allJsonObj = new JsonParser().parse(content).getAsJsonObject();
         loadStaticResources(gson, allJsonObj);
         // initiate other services
         JsonObject servicesJsonObj = allJsonObj.getAsJsonObject("services");

@@ -26,6 +26,7 @@ public class MessageBusImpl implements MessageBus {
         serviceToQueue = new ConcurrentHashMap<>();
         broadcastToServices = new ConcurrentHashMap<>();
     }
+
     private static class SingletonHolder {
         private static MessageBusImpl instance = new MessageBusImpl();
     }
@@ -36,7 +37,6 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-        //todo is synch?
         RotatingQueue<MicroService> services = eventTypeToServices.get(type);
         if (CollectionUtils.isEmpty(services)) {
             services = new RotatingQueue<>();
@@ -74,7 +74,7 @@ public class MessageBusImpl implements MessageBus {
             try {
                 currentQ.put(b);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                System.out.println(String.format("MessageBusImp.sendBroadcast interrupted: %s", e.getMessage()));
             }
         });
     }
@@ -88,7 +88,7 @@ public class MessageBusImpl implements MessageBus {
         try {
             events.put(e);
         } catch (InterruptedException e1) {
-            e1.printStackTrace();
+            System.out.println(String.format("MessageBusImp.sendEvent interrupted: %s", e1.getMessage()));
         }
         Future<T> future = new Future<>();
         e.setFuture(future);
@@ -103,17 +103,17 @@ public class MessageBusImpl implements MessageBus {
     @Override
     public void unregister(MicroService m) {
         serviceToQueue.remove(m.getName());
-        removeFromValues(eventTypeToServices,m);
-        removeFromValues(broadcastToServices,m);
+        removeFromValues(eventTypeToServices, m);
+        removeFromValues(broadcastToServices, m);
     }
 
     private void removeFromValues(Map<Class, ? extends Collection> map, MicroService m) {
         Iterator it = map.entrySet().iterator();
-        while (it.hasNext() ) {
-            Map.Entry pair = (Map.Entry)it.next();
+        while (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
             Collection<MicroService> services = (Collection) pair.getValue();
-            for (MicroService service: services){
-                if (service == m){
+            for (MicroService service : services) {
+                if (service == m) {
                     services.remove(service);
                     break;
                 }
