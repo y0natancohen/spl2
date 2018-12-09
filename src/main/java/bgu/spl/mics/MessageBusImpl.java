@@ -21,19 +21,17 @@ public class MessageBusImpl implements MessageBus {
     private Map<Class, RotatingQueue<MicroService>> broadcastToServices;
 
 
-    private static MessageBusImpl theSingleton = null;
-
     private MessageBusImpl() {
         eventTypeToServices = new ConcurrentHashMap<>();
         serviceToQueue = new ConcurrentHashMap<>();
         broadcastToServices = new ConcurrentHashMap<>();
     }
+    private static class SingletonHolder {
+        private static MessageBus instance = new MessageBusImpl();
+    }
 
-    public static MessageBusImpl getInstance() {
-        if (MessageBusImpl.theSingleton == null) {
-            MessageBusImpl.theSingleton = new MessageBusImpl();
-        }
-        return MessageBusImpl.theSingleton;
+    public static MessageBus getInstance() {
+        return SingletonHolder.instance;
     }
 
     @Override

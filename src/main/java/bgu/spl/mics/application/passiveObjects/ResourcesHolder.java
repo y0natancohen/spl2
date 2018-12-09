@@ -23,18 +23,17 @@ public class ResourcesHolder {
     /**
      * Retrieves the single instance of this class.
      */
-    private static ResourcesHolder theSingleton = null;
     private Semaphore semaphore;
     private Queue<DeliveryVehicle> availableVehicles;
 
     private ResourcesHolder() {
     }
+    private static class SingletonHolder {
+        private static ResourcesHolder instance = new ResourcesHolder();
+    }
 
     public static ResourcesHolder getInstance() {
-        if (ResourcesHolder.theSingleton == null) {
-            ResourcesHolder.theSingleton = new ResourcesHolder();
-        }
-        return ResourcesHolder.theSingleton;
+        return SingletonHolder.instance;
     }
 
     /**

@@ -20,18 +20,16 @@ import java.util.TimerTask;
  * You MAY change constructor signatures and even addIfAbcent new public constructors.
  */
 public class TimeService extends MicroService {
-    private static TimeService theSingleton;
     private int speed;
     private int duration;
     private int tickCount = 1;
 
+    private static class SingletonHolder {
+        private static MicroService instance = new TimeService();
+    }
 
-    //todo:elad write thread-safe singleton
-    public static TimeService getInstance() {
-        if (theSingleton == null) {
-            theSingleton = new TimeService();
-        }
-        return theSingleton;
+    public static MicroService getInstance() {
+        return SingletonHolder.instance;
     }
 
     private TimeService() {
