@@ -31,9 +31,7 @@ public class SellingService extends MicroService {
     public void proccessOrder(BookOrderEvent bookOrderEvent) {
         // todo sync parts of this
         OrderReceipt receipt = null;
-
         Integer price = getBookPrice(bookOrderEvent);
-        //todo:elad - put whole customer on bookOrderEvent
         Customer customer = bookOrderEvent.getCustomer();
         if (price != -1) {
             OrderResult result = tryTake(bookOrderEvent);
