@@ -21,6 +21,13 @@ import java.util.concurrent.*;
  */
 public class Inventory {
 
+    private static class SingletonHolder {
+        private static Inventory instance = new Inventory();
+    }
+
+    public static Inventory getInstance() {
+        return SingletonHolder.instance;
+    }
 
     public int getBookInventoryInfosSize() {
         return this.bookInventoryInfos.size();
@@ -29,19 +36,13 @@ public class Inventory {
     /**
      * Retrieves the single instance of this class.
      */
-
-
     private Queue<BookInventoryInfo> bookInventoryInfos;
 
-    private final static Inventory theSingleton = new Inventory();
 
     private Inventory() {
         bookInventoryInfos = new ConcurrentLinkedDeque<>();
     }
 
-    public static Inventory getInstance() {
-        return theSingleton;
-    }
 
     /**
      * Initializes the store inventory. This method adds all the items given to the store
@@ -65,7 +66,7 @@ public class Inventory {
      * second should reduce by one the number of books of the desired type.
      */
     public OrderResult take(String book) {
-        synchronized (theSingleton) {
+        synchronized (getInstance()) {
             for (BookInventoryInfo bookInfo : bookInventoryInfos) {
                 if (bookInfo.getBookTitle().equals(book) && bookInfo.getAmountInInventory() > 0) {
                     bookInfo.decreaseAmount();
@@ -85,7 +86,7 @@ public class Inventory {
      * @return the price of the book if it is available, -1 otherwise.
      */
     public int checkAvailabiltyAndGetPrice(String book) {
-        synchronized (theSingleton) {
+        synchronized (getInstance()) {
             BookInventoryInfo bookInfo = getBookInfo(book);
             if ((bookInfo != null) && (bookInfo.getAmountInInventory() > 0)) {
                 return bookInfo.getPrice();
@@ -118,7 +119,7 @@ public class Inventory {
         FileOutputStream f = new FileOutputStream(file);
         ObjectOutputStream s = new ObjectOutputStream(f);
         try {
-            synchronized (theSingleton) {
+            synchronized (getInstance()) {
                 for (BookInventoryInfo bookInfo : bookInventoryInfos) {
                     map.put(bookInfo.getBookTitle(), bookInfo.getAmountInInventory());
                 }
