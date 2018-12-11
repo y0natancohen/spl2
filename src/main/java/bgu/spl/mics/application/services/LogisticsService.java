@@ -9,6 +9,8 @@ import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
+import java.util.concurrent.CountDownLatch;
+
 /**
  * Logistic service in charge of delivering books that have been purchased to customers.
  * Handles {@link DeliveryEvent}.
@@ -19,14 +21,18 @@ import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
  * You MAY change constructor signatures and even addIfAbcent new public constructors.
  */
 public class LogisticsService extends MicroService {
+	private CountDownLatch countDownLatch;
 
-	public LogisticsService() {
+
+	public LogisticsService(CountDownLatch countDownLatch) {
 		super("LogisticsService");
+		this.countDownLatch = countDownLatch;
 	}
 
 	@Override
 	protected void initialize() {
 		subscribeEvent(DeliveryEvent.class, this::processDelivery);
+		countDownLatch.countDown();
 	}
 
 	private void processDelivery(DeliveryEvent deliveryEvent){
