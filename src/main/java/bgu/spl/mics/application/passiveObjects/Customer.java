@@ -1,5 +1,6 @@
 package bgu.spl.mics.application.passiveObjects;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -8,7 +9,7 @@ import java.util.List;
  * <p>
  * You may addIfAbcent fields and methods to this class as you see fit (including public methods).
  */
-public class Customer {
+public class Customer implements Serializable {
 
 	/**
      * Retrieves the name of the customer.

@@ -6,9 +6,13 @@ import bgu.spl.mics.application.services.*;
 import com.google.gson.*;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -57,9 +61,29 @@ public class BookStoreRunner {
         }
         // trigger interruption
         threadPool.forEach(Thread::interrupt);
-        //todo:elad make sure all service initialize before time service
         // initiate time service
-        //todo: write to output files
+        handleOutput(args, services);
+    }
+
+    private static void handleOutput(String[] args, List<MicroService> services) {
+        List<APIService> apiServices = services.stream()
+                .filter(service -> service instanceof APIService)
+                .map(service -> (APIService)service)
+                .collect(Collectors.toList());
+        printCustomersInSystem(args[1], apiServices);
+        Inventory.getInstance().printInventoryToFile(args[2]);
+        MoneyRegister.getInstance().printOrderReceipts(args[3]);
+    }
+
+    private static void printCustomersInSystem(String fileName, List<APIService> apiServices) {
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(fileName))) {
+            Map<Integer, Customer> customerById = apiServices.stream()
+                    .map(APIService::getCustomer)
+                    .collect(Collectors.toMap(Customer::getId, Function.identity()));
+            objectOutputStream.writeObject(customerById);
+        } catch (IOException e) {
+            System.out.println("could not write books inventory");
+        }
     }
 
     private static int getNumOfServices(Gson gson, JsonObject servicesJsonObj) {

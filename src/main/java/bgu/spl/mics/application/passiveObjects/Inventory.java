@@ -109,28 +109,22 @@ public class Inventory {
 
     /**
      * <p>
-     * Prints to a file name @filename a serialized object HashMap<String,Integer> which is a Map of all the books in the inventory. The keys of the Map (type {@link String})
+     * Prints to a file name @filename a serialized object HashMap<String,Integer> which is a Map of all the books in
+     * the inventory. The keys of the Map (type {@link String})
      * should be the titles of the books while the values (type {@link Integer}) should be
      * their respective available amount in the inventory.
      * This method is called by the main method in order to generate the output.
      */
 
-    public void printInventoryToFile(String filename) throws IOException {
-        Map<String, Integer> map = new HashMap<>();
-        File file = new File(filename);
-        FileOutputStream f = new FileOutputStream(file);
-        ObjectOutputStream s = new ObjectOutputStream(f);
-        try {
-            synchronized (getInstance()) {
-                for (BookInventoryInfo bookInfo : bookInventoryInfos) {
-                    map.put(bookInfo.getBookTitle(), bookInfo.getAmountInInventory());
-                }
-                s.writeObject(map);
-                s.close();
+    public void printInventoryToFile(String filename) {
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(filename))) {
+            Map<String, Integer> map = new HashMap<>();
+            for (BookInventoryInfo bookInfo : bookInventoryInfos) {
+                map.put(bookInfo.getBookTitle(), bookInfo.getAmountInInventory());
             }
-        } finally {
-            s.writeObject(map);
-            s.close();
+            objectOutputStream.writeObject(map);
+        } catch (IOException e) {
+            System.out.println("could not write books inventory");
         }
     }
 }

@@ -23,6 +23,15 @@ public class APIService extends MicroService {
     private Customer customer;
     private CountDownLatch countDownLatch;
 
+    public Customer getCustomer() {
+        return customer;
+    }
+
+    public void setCustomer(Customer customer) {
+        this.customer = customer;
+    }
+
+
     public APIService(Customer customer, CountDownLatch countDownLatch) {
         super("APIService");
         this.customer = customer;
