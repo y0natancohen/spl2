@@ -19,18 +19,19 @@ public class OrderReceipt implements Serializable {
 	private int issuedTick;
 	private int orderTick;
 	private int proccessTick;
+	public OrderReceipt(){}
+	public OrderReceipt(int orderId, String seller, int customerId, String bookTitle, int price, int issuedTick, int orderTick, int proccessTick) {
+		this.orderId = orderId;
+		this.seller = seller;
+		this.customerId = customerId;
+		this.bookTitle = bookTitle;
+		this.price = price;
+		this.issuedTick = issuedTick;
+		this.orderTick = orderTick;
+		this.proccessTick = proccessTick;
+	}
 
-    public OrderReceipt(String seller, int customerId, String bookTitle, int orderTick) {
-        this.orderId = 0;  // TODO: decide where to generate this
-        this.seller = seller;
-        this.customerId = customerId;
-        this.bookTitle = bookTitle;
-        this.orderTick = orderTick;
-        this.price = 0; // TODO: get the price from somewhere
-    }
-
-
-    /**
+	/**
      * Retrieves the orderId of this receipt.
      */
 	public int getOrderId() {

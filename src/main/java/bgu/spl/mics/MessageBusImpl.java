@@ -87,13 +87,13 @@ public class MessageBusImpl implements MessageBus {
         RotatingQueue<MicroService> services = eventTypeToServices.get(e.getClass());
         MicroService service = services.getAndRotate();
         BlockingQueue<Message> events = serviceToQueue.get(service.getName());
+        Future<T> future = new Future<>();
+        e.setFuture(future);
         try {
             events.put(e);
         } catch (InterruptedException e1) {
             System.out.println(String.format("MessageBusImp.sendEvent interrupted: %s", e1.getMessage()));
         }
-        Future<T> future = new Future<>();
-        e.setFuture(future);
         return future;
     }
 

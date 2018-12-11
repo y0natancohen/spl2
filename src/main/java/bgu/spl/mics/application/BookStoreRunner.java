@@ -50,29 +50,44 @@ public class BookStoreRunner {
         } catch (InterruptedException e) {
             System.out.println("Something reeeeealy bad happend");
         }
+        // initiate time service
         TimeService time = gson.fromJson(servicesJsonObj.get("time"), TimeService.class);
         Thread timeServiceThread = new Thread(time);
         timeServiceThread.start();
         try {
-            // waits for time service to terminate
             timeServiceThread.join();
         } catch (InterruptedException e) {
-            System.out.println("should not happen");
         }
-        // trigger interruption
-        threadPool.forEach(Thread::interrupt);
-        // initiate time service
+        System.out.println("!!  after waiting for time!!");
+        System.out.println("system has " + threadPool.size());
+        threadPool.forEach(thread -> {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                System.out.println(String.format("failed joining: %s", e.getMessage()));
+            }
+        });
+
         handleOutput(args, services);
     }
 
     private static void handleOutput(String[] args, List<MicroService> services) {
         List<APIService> apiServices = services.stream()
                 .filter(service -> service instanceof APIService)
-                .map(service -> (APIService)service)
+                .map(service -> (APIService) service)
                 .collect(Collectors.toList());
         printCustomersInSystem(args[1], apiServices);
         Inventory.getInstance().printInventoryToFile(args[2]);
         MoneyRegister.getInstance().printOrderReceipts(args[3]);
+        printMoneyRegister(args[4]);
+    }
+
+    private static void printMoneyRegister(String fileName) {
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(fileName))) {
+            objectOutputStream.writeObject(MoneyRegister.getInstance());
+        } catch (IOException e) {
+            System.out.println("could not write books inventory");
+        }
     }
 
     private static void printCustomersInSystem(String fileName, List<APIService> apiServices) {
@@ -97,23 +112,30 @@ public class BookStoreRunner {
         return counter;
     }
 
-    private static List<MicroService> extractServices(Gson gson, JsonObject servicesJsonObj,CountDownLatch countDownLatch) {
+    private static List<MicroService> extractServices(Gson gson, JsonObject servicesJsonObj, CountDownLatch countDownLatch) {
+        int seq = 1;
         List<MicroService> services = new LinkedList<>();
         for (int i = 0; i < gson.fromJson(servicesJsonObj.get("selling"), Integer.class); i++) {
-            services.add(new SellingService(countDownLatch));
+            services.add(new SellingService(countDownLatch, seq));
+            seq++;
         }
         for (int i = 0; i < gson.fromJson(servicesJsonObj.get("inventoryService"), Integer.class); i++) {
-            services.add(new InventoryService(countDownLatch));
+            services.add(new InventoryService(countDownLatch, seq));
+            seq++;
         }
         for (int i = 0; i < gson.fromJson(servicesJsonObj.get("logistics"), Integer.class); i++) {
-            services.add(new LogisticsService(countDownLatch));
+            services.add(new LogisticsService(countDownLatch, seq));
+            seq++;
         }
         for (int i = 0; i < gson.fromJson(servicesJsonObj.get("resourcesService"), Integer.class); i++) {
-            services.add(new ResourceService(countDownLatch));
+            services.add(new ResourceService(countDownLatch, seq));
+            seq++;
         }
         List<Customer> customers = getArrayFromJson("customers", Customer[].class, servicesJsonObj, gson);
         customers.sort(Comparator.comparing(Customer::getId));
-        customers.forEach(customer -> services.add(new APIService(customer, countDownLatch)));
+        customers.forEach(customer -> {
+            services.add(new APIService(customer, countDownLatch));
+        });
         return services;
     }
 

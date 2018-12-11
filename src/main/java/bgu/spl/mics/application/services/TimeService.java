@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.PoisonPill;
 import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
@@ -38,17 +39,23 @@ public class TimeService extends MicroService {
 
     @Override
     protected void initialize() {
+        Timer timer = new Timer("Timer");
         TimerTask repeatedTask = new TimerTask() {
             public void run() {
                 if (tickCount <= duration) {
                     System.out.println("sending tick" + tickCount);
                     sendBroadcast(new TickBroadcast(tickCount));
                     tickCount++;
+                } else {
+                    System.out.println("sending poison pill!!!");
+                    sendBroadcast(new PoisonPill());
+                    timer.cancel();
+                    timer.purge();
                 }
-                terminate();
             }
         };
-        Timer timer = new Timer("Timer");
         timer.scheduleAtFixedRate(repeatedTask, 0, speed);
+        System.out.println("im here my tick is" + tickCount);
+        terminate();
     }
 }

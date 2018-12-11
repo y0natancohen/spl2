@@ -3,6 +3,7 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.AcquireVehicleEvent;
+import bgu.spl.mics.application.messages.PoisonPill;
 import bgu.spl.mics.application.messages.ReleaseVehicleEvent;
 import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
 import bgu.spl.mics.application.passiveObjects.Inventory;
@@ -24,8 +25,8 @@ public class ResourceService extends MicroService {
     private CountDownLatch countDownLatch;
     private static ResourcesHolder resources = ResourcesHolder.getInstance();
 
-    public ResourceService(CountDownLatch countDownLatch) {
-        super("ResourceService");
+    public ResourceService(CountDownLatch countDownLatch, int seq) {
+        super("ResourceService " + seq);
         this.countDownLatch = countDownLatch;
     }
 
@@ -33,6 +34,7 @@ public class ResourceService extends MicroService {
     protected void initialize() {
         subscribeEvent(AcquireVehicleEvent.class, this::aquire);
         subscribeEvent(ReleaseVehicleEvent.class, this::release);
+        subscribeBroadcast(PoisonPill.class, poison -> terminate());
         countDownLatch.countDown();
     }
 

@@ -1,6 +1,7 @@
 package bgu.spl.mics;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -34,7 +35,7 @@ public abstract class MicroService implements Runnable {
      *             does not have to be unique)
      */
     public MicroService(String name) {
-        this.name = name + Thread.currentThread().getName();
+        this.name = name;
         this.eventToCallback = new ConcurrentHashMap<>();
         this.broadcastToCallback = new ConcurrentHashMap<>();
     }
@@ -146,6 +147,7 @@ public abstract class MicroService implements Runnable {
      */
     protected final void terminate() {
         this.terminated = true;
+        messageBus.unregister(this);
     }
 
     /**
@@ -176,8 +178,9 @@ public abstract class MicroService implements Runnable {
             } catch (InterruptedException e) {
                 terminated = true;
             }
+            System.out.println("im in loop my name is:" + getName());
         }
-        messageBus.unregister(this);
+        System.out.println("leaving" + getName());
     }
 
 }

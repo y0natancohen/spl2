@@ -1,12 +1,14 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 
 /**
@@ -88,7 +90,8 @@ public class Inventory {
      */
     public int checkAvailabiltyAndGetPrice(String book) {
         System.out.println("inside Inventory.checkAvailabiltyAndGetPrice()");
-        synchronized (getInstance()) {
+        if (getBookInfo(book) == null) return -1;
+        synchronized (getBookInfo(book)) {
             BookInventoryInfo bookInfo = getBookInfo(book);
             if ((bookInfo != null) && (bookInfo.getAmountInInventory() > 0)) {
                 return bookInfo.getPrice();

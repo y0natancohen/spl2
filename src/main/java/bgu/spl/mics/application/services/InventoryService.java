@@ -2,6 +2,7 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CheckAvailabilityEvent;
+import bgu.spl.mics.application.messages.PoisonPill;
 import bgu.spl.mics.application.messages.TakeFromInventoryEvent;
 import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
@@ -21,12 +22,11 @@ import java.util.concurrent.CountDownLatch;
  */
 
 public class InventoryService extends MicroService{
-
     private static Inventory inventory = Inventory.getInstance();
 	private CountDownLatch countDownLatch;
 
-	public InventoryService(CountDownLatch countDownLatch) {
-		super("InventoryService");
+	public InventoryService(CountDownLatch countDownLatch, int seq) {
+		super("InventoryService " + seq);
 		this.countDownLatch = countDownLatch;
 	}
 
@@ -34,6 +34,7 @@ public class InventoryService extends MicroService{
 	protected void initialize() {
 		subscribeEvent(TakeFromInventoryEvent.class, this::processTake);
 		subscribeEvent(CheckAvailabilityEvent.class, this::precessCheck);
+		subscribeBroadcast(PoisonPill.class, poison -> terminate());
 		countDownLatch.countDown();
 	}
 
