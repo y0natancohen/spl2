@@ -18,7 +18,7 @@ import java.util.concurrent.CountDownLatch;
  */
 public class SellingService extends MicroService {
 
-    private MoneyRegister register = MoneyRegister.getInstance();
+    private final MoneyRegister register = MoneyRegister.getInstance();
     private CountDownLatch countDownLatch;
 
     public SellingService(CountDownLatch countDownLatch) {
@@ -35,21 +35,30 @@ public class SellingService extends MicroService {
 
     public void proccessOrder(BookOrderEvent bookOrderEvent) {
         System.out.println("inside SellingService.proccessOrder()");
-        // todo sync parts of this
         OrderReceipt receipt = null;
         Integer price = getBookPrice(bookOrderEvent);
-        Customer customer = bookOrderEvent.getCustomer();
+        boolean success = false;
+
         if (price != -1) {
-            OrderResult result = tryTake(bookOrderEvent);
-            if (result == OrderResult.SUCCESSFULLY_TAKEN) {
-                register.chargeCreditCard(customer, price);
-                receipt = new OrderReceipt(this.getName(),
-                        customer.getId(),
-                        bookOrderEvent.getBookName(),
-                        bookOrderEvent.getOrderTick());
-                deliver(customer);
+            synchronized (bookOrderEvent.getCustomer()) { // 2 orders from same customer will be synced
+                if (bookOrderEvent.getCustomer().getCreditCard().getAmount() >= price) {
+                    OrderResult result = tryTake(bookOrderEvent);
+                    if (result == OrderResult.SUCCESSFULLY_TAKEN) {
+                        register.chargeCreditCard(bookOrderEvent.getCustomer(), price);
+                        success = true;
+                    }
+                }
             }
         }
+
+        if (success) {
+            receipt = new OrderReceipt(this.getName(),
+                    bookOrderEvent.getCustomer().getId(),
+                    bookOrderEvent.getBookName(),
+                    bookOrderEvent.getOrderTick());
+            deliver(bookOrderEvent.getCustomer());
+        }
+
         complete(bookOrderEvent, receipt);
     }
 
