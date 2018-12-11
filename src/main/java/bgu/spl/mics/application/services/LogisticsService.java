@@ -30,6 +30,7 @@ public class LogisticsService extends MicroService {
 	}
 
 	private void processDelivery(DeliveryEvent deliveryEvent){
+		System.out.println("inside LogisticsService.processDelivery()");
 		DeliveryVehicle vehicle = sendEvent(new AcquireVehicleEvent()).get();
 		vehicle.deliver(deliveryEvent.getAddress(), deliveryEvent.getDistance());
 		sendEvent(new ReleaseVehicleEvent(vehicle));

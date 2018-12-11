@@ -34,10 +34,9 @@ public abstract class MicroService implements Runnable {
      *             does not have to be unique)
      */
     public MicroService(String name) {
-        this.name = name + Thread.currentThread().getId();
+        this.name = name + Thread.currentThread().getName();
         this.eventToCallback = new ConcurrentHashMap<>();
         this.broadcastToCallback = new ConcurrentHashMap<>();
-        messageBus.register(this);
     }
 
     /**
@@ -164,6 +163,7 @@ public abstract class MicroService implements Runnable {
     @Override
     public final void run() {
         System.out.println(getName() + " is initializing...");
+        messageBus.register(this);
         initialize();
         while (!terminated) {
             try {

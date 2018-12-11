@@ -40,10 +40,10 @@ public class TimeService extends MicroService {
     protected void initialize() {
         TimerTask repeatedTask = new TimerTask() {
             public void run() {
-                if (tickCount < duration) {
-                    tickCount = tickCount++;
+                if (tickCount <= duration) {
                     System.out.println("sending tick" + tickCount);
                     sendBroadcast(new TickBroadcast(tickCount));
+                    tickCount++;
                 }
                 terminate();
             }

@@ -5,7 +5,7 @@ import bgu.spl.mics.Future;
 
 import java.util.Objects;
 
-public class BaseEvent<T> implements Event<T> {
+public class FuturedEvent<T> implements Event<T> {
     private Future<T> future;
 
     public Future<T> getFuture() {
@@ -20,7 +20,7 @@ public class BaseEvent<T> implements Event<T> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        BaseEvent<?> baseEvent = (BaseEvent<?>) o;
+        FuturedEvent<?> baseEvent = (FuturedEvent<?>) o;
         return Objects.equals(future, baseEvent.future);
     }
 

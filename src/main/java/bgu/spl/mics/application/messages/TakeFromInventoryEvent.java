@@ -4,7 +4,7 @@ import bgu.spl.mics.application.passiveObjects.OrderResult;
 
 import java.util.Objects;
 
-public class TakeFromInventoryEvent extends BaseEvent<OrderResult>{
+public class TakeFromInventoryEvent extends FuturedEvent<OrderResult> {
     private String bookName;
 
     public TakeFromInventoryEvent(String bookName) {

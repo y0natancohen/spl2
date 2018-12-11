@@ -29,6 +29,7 @@ public class SellingService extends MicroService {
 
 
     public void proccessOrder(BookOrderEvent bookOrderEvent) {
+        System.out.println("inside SellingService.proccessOrder()");
         // todo sync parts of this
         OrderReceipt receipt = null;
         Integer price = getBookPrice(bookOrderEvent);

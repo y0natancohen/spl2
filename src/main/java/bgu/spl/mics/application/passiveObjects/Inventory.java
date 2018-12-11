@@ -66,6 +66,7 @@ public class Inventory {
      * second should reduce by one the number of books of the desired type.
      */
     public OrderResult take(String book) {
+        System.out.println("inside Inventory.take()");
         synchronized (getInstance()) {
             for (BookInventoryInfo bookInfo : bookInventoryInfos) {
                 if (bookInfo.getBookTitle().equals(book) && bookInfo.getAmountInInventory() > 0) {
@@ -86,6 +87,7 @@ public class Inventory {
      * @return the price of the book if it is available, -1 otherwise.
      */
     public int checkAvailabiltyAndGetPrice(String book) {
+        System.out.println("inside Inventory.checkAvailabiltyAndGetPrice()");
         synchronized (getInstance()) {
             BookInventoryInfo bookInfo = getBookInfo(book);
             if ((bookInfo != null) && (bookInfo.getAmountInInventory() > 0)) {

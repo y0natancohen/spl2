@@ -32,11 +32,13 @@ public class ResourceService extends MicroService {
     }
 
     private void release(ReleaseVehicleEvent releaseEvent) {
+        System.out.println("inside ResourceService.release()");
         resources.releaseVehicle(releaseEvent.getVehicle());
         complete(releaseEvent, true);
     }
 
     private void aquire(AcquireVehicleEvent aquireEvent) {
+        System.out.println("inside ResourceService.aquire()");
         Future<DeliveryVehicle> deliveryVehicleFuture = resources.acquireVehicle();
         complete(aquireEvent, deliveryVehicleFuture.get());
     }

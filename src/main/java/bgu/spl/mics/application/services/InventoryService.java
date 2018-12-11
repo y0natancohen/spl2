@@ -4,7 +4,9 @@ import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CheckAvailabilityEvent;
 import bgu.spl.mics.application.messages.TakeFromInventoryEvent;
 import bgu.spl.mics.application.passiveObjects.Inventory;
+import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.OrderResult;
+import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
 /**
  * InventoryService is in charge of the book inventory and stock.
@@ -31,12 +33,14 @@ public class InventoryService extends MicroService{
 	}
 
 	private void processTake(TakeFromInventoryEvent takeEvent){
-	    OrderResult orderResult = inventory.take(takeEvent.getBookName());
+		System.out.println("inside InventoryService.processTake()");
+		OrderResult orderResult = inventory.take(takeEvent.getBookName());
 	    complete(takeEvent, orderResult);
     }
 
 
     private void precessCheck(CheckAvailabilityEvent checkEvent){
+		System.out.println("inside InventoryService.precessCheck()");
 	    Integer price = inventory.checkAvailabiltyAndGetPrice(checkEvent.getBookName());
 	    complete(checkEvent, price);
     }

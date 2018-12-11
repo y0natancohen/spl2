@@ -5,7 +5,7 @@ import bgu.spl.mics.application.passiveObjects.OrderReceipt;
 
 import java.util.Objects;
 
-public class BookOrderEvent extends BaseEvent<OrderReceipt> {
+public class BookOrderEvent extends FuturedEvent<OrderReceipt> {
     private String bookName;
     private Customer customer;
     private int orderTick;
@@ -44,5 +44,14 @@ public class BookOrderEvent extends BaseEvent<OrderReceipt> {
     public int hashCode() {
 
         return Objects.hash(super.hashCode(), bookName, customer, orderTick);
+    }
+
+    @Override
+    public String toString() {
+        return "BookOrderEvent{" +
+                "bookName='" + bookName + '\'' +
+                ", customer=" + customer +
+                ", orderTick=" + orderTick +
+                '}';
     }
 }

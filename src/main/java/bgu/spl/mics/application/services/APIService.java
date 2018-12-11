@@ -32,10 +32,15 @@ public class APIService extends MicroService {
 
     @Override
     protected void initialize() {
-        subscribeBroadcast(TickBroadcast.class, tickBroadcast -> customer.getOrderSchedule().stream()
-                .filter(orderSchedule -> orderSchedule.getTick() == tickBroadcast.getCurrentTick())
-                .forEach(relevantOrder ->
-                        sendEvent(new BookOrderEvent
-                                (relevantOrder.getBookTitle(), customer, relevantOrder.getTick()))));
+        subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
+            customer.getOrderSchedule().stream()
+                    .filter(orderSchedule -> orderSchedule.getTick() == tickBroadcast.getCurrentTick())
+                    .forEach(relevantOrder -> {
+                        BookOrderEvent bookOrderEvent =
+                                new BookOrderEvent(relevantOrder.getBookTitle(), customer, relevantOrder.getTick());
+                        System.out.println(String.format("service: %s sending order event: %s", getName(), bookOrderEvent));
+                        sendEvent(bookOrderEvent);
+                    });
+        });
     }
 }

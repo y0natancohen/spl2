@@ -93,5 +93,12 @@ public class Customer {
 	public int getCreditNumber() {
 		return creditCard.getNumber();
 	}
-	
+
+	@Override
+	public String toString() {
+		return "Customer{" +
+				"id=" + id +
+				", name='" + name + '\'' +
+				'}';
+	}
 }
