@@ -1,7 +1,11 @@
 package bgu.spl.mics;
 
+import bgu.spl.mics.application.messages.PoisonPill;
 import bgu.spl.mics.application.services.TimeService;
 
+import javax.print.attribute.standard.PDLOverrideSupported;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -168,7 +172,7 @@ public abstract class MicroService implements Runnable {
      */
     @Override
     public final void run() {
-        System.out.println(getName() + " is initializing...");
+//        System.out.println(getName() + " is initializing...");
         messageBus.register(this);
         initialize();
         while (!terminated) {
@@ -177,12 +181,12 @@ public abstract class MicroService implements Runnable {
                 if (message instanceof Event) {
                     eventToCallback.get(message.getClass()).call(message);
                 } else if (message instanceof Broadcast) {
+                    if (message instanceof PoisonPill){System.out.println(this.name + " was  poisoned");}
                     broadcastToCallback.get(message.getClass()).call(message);
                 }
             } catch (InterruptedException e) {
                 terminated = true;
             }
-            System.out.println("im in loop my name is:" + getName());
         }
         System.out.println("leaving" + getName());
     }

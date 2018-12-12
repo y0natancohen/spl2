@@ -40,18 +40,17 @@ public class APIService extends MicroService {
     protected void initialize() {
         subscribeBroadcast(PoisonPill.class, poison -> terminate());
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
-            System.out.println(String.format("customer ordering now is: %s", customer));
             customer.getOrderSchedule().stream()
                     .filter(orderSchedule -> {
-                        System.out.println(String.format("order schedule tick is: %s broadcast tick is: %s",
-                                orderSchedule.getTick(), tickBroadcast.getCurrentTick()));
+//                                orderSchedule.getTick(), tickBroadcast.getCurrentTick()));
                         return orderSchedule.getTick() == tickBroadcast.getCurrentTick();
                     })
                     .forEach(relevantOrder -> {
+                        System.out.println(String.format("customer ordering now is: %s", customer));
                         BookOrderEvent bookOrderEvent =
                                 new BookOrderEvent(relevantOrder.getBookTitle(), customer, relevantOrder.getTick(),
                                         IndexDispatcher.getInstance().getNextId());
-                        System.out.println(String.format("service: %s sending order event: %s", getName(), bookOrderEvent));
+//                        System.out.println(String.format("service: %s sending order event: %s", getName(), bookOrderEvent));
                         sendEvent(bookOrderEvent);
                     });
         });

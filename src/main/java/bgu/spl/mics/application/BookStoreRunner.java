@@ -51,14 +51,14 @@ public class BookStoreRunner {
             System.out.println("Something reeeeealy bad happend");
         }
         // initiate time service
-        TimeService time = gson.fromJson(servicesJsonObj.get("time"), TimeService.class);
-        Thread timeServiceThread = new Thread(time);
+        TimeService tempTime = gson.fromJson(servicesJsonObj.get("time"), TimeService.class);
+        TimeService timeService = new TimeService(threadPool, tempTime.getSpeed(), tempTime.getDuration());
+        Thread timeServiceThread = new Thread(timeService);
         timeServiceThread.start();
         try {
             timeServiceThread.join();
         } catch (InterruptedException e) {
         }
-        System.out.println("!!  after waiting for time!!");
         System.out.println("system has " + threadPool.size());
         threadPool.forEach(thread -> {
             try {
@@ -86,7 +86,8 @@ public class BookStoreRunner {
         try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(fileName))) {
             objectOutputStream.writeObject(MoneyRegister.getInstance());
         } catch (IOException e) {
-            System.out.println("could not write books inventory");
+//            e.printStackTrace();
+            System.out.println("could not write money register");
         }
     }
 
@@ -95,9 +96,11 @@ public class BookStoreRunner {
             Map<Integer, Customer> customerById = apiServices.stream()
                     .map(APIService::getCustomer)
                     .collect(Collectors.toMap(Customer::getId, Function.identity()));
+            System.out.println(customerById.toString());
             objectOutputStream.writeObject(customerById);
         } catch (IOException e) {
-            System.out.println("could not write books inventory");
+//            e.printStackTrace();
+            System.out.println("could not write customers");
         }
     }
 

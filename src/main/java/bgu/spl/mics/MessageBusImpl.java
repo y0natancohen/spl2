@@ -1,13 +1,13 @@
 package bgu.spl.mics;
 
 import bgu.spl.mics.application.passiveObjects.RotatingQueue;
+import bgu.spl.mics.application.services.TimeService;
 import org.apache.commons.collections4.CollectionUtils;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -21,12 +21,14 @@ public class MessageBusImpl implements MessageBus {
     private Map<Class, RotatingQueue<MicroService>> eventTypeToServices;
     private Map<String, BlockingQueue<Message>> serviceToQueue;
     private Map<Class, RotatingQueue<MicroService>> broadcastToServices;
+    private Queue<Future> futuresLog;
 
 
     private MessageBusImpl() {
         eventTypeToServices = new ConcurrentHashMap<>();
         serviceToQueue = new ConcurrentHashMap<>();
         broadcastToServices = new ConcurrentHashMap<>();
+        futuresLog = new ConcurrentLinkedQueue<>();
     }
 
     private static class SingletonHolder {
@@ -75,6 +77,10 @@ public class MessageBusImpl implements MessageBus {
             BlockingQueue<Message> currentQ = serviceToQueue.get(microService.getName());
             try {
                 currentQ.put(b);
+
+//                System.out.println("--------------------------------------");
+//                System.out.println(serviceToQueue.toString());
+//                System.out.println("--------------------------------------");
             } catch (InterruptedException e) {
                 System.out.println(String.format("MessageBusImp.sendBroadcast interrupted: %s", e.getMessage()));
             }
@@ -88,6 +94,7 @@ public class MessageBusImpl implements MessageBus {
         MicroService service = services.getAndRotate();
         BlockingQueue<Message> events = serviceToQueue.get(service.getName());
         Future<T> future = new Future<>();
+        futuresLog.add(future);
         e.setFuture(future);
         try {
             events.put(e);
@@ -104,9 +111,19 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void unregister(MicroService m) {
+        if (!(m instanceof TimeService)) {
+            destroyTheFuture();
+        }
         serviceToQueue.remove(m.getName());
         removeFromValues(eventTypeToServices, m);
         removeFromValues(broadcastToServices, m);
+    }
+
+    private void destroyTheFuture() {
+//        System.out.println("im destroying the future");
+        for (Future future: futuresLog){
+            future.resolve(null);
+        }
     }
 
     private void removeFromValues(Map<Class, ? extends Collection> map, MicroService m) {

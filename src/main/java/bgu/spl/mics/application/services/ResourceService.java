@@ -10,6 +10,8 @@ import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -24,18 +26,31 @@ import java.util.concurrent.CountDownLatch;
 public class ResourceService extends MicroService {
     private CountDownLatch countDownLatch;
     private static ResourcesHolder resources = ResourcesHolder.getInstance();
+    private Queue<Future> futuresLog;
 
     public ResourceService(CountDownLatch countDownLatch, int seq) {
         super("ResourceService " + seq);
         this.countDownLatch = countDownLatch;
+        futuresLog = new ConcurrentLinkedQueue<>();
     }
 
     @Override
     protected void initialize() {
         subscribeEvent(AcquireVehicleEvent.class, this::aquire);
         subscribeEvent(ReleaseVehicleEvent.class, this::release);
-        subscribeBroadcast(PoisonPill.class, poison -> terminate());
+        subscribeBroadcast(PoisonPill.class, poison -> {
+                    terminate();
+                    destroyTheDeliveryFuture();
+                }
+        );
         countDownLatch.countDown();
+    }
+
+    private void destroyTheDeliveryFuture() {
+//        System.out.println("im destroying the delivery future");
+        for (Future future : futuresLog){
+            future.resolve(null);
+        }
     }
 
     private void release(ReleaseVehicleEvent releaseEvent) {
@@ -47,7 +62,8 @@ public class ResourceService extends MicroService {
     private void aquire(AcquireVehicleEvent aquireEvent) {
         System.out.println("inside ResourceService.aquire()");
         Future<DeliveryVehicle> deliveryVehicleFuture = resources.acquireVehicle();
-        complete(aquireEvent, deliveryVehicleFuture.get());
+        futuresLog.add(deliveryVehicleFuture);
+        complete(aquireEvent, deliveryVehicleFuture);
     }
 
 }

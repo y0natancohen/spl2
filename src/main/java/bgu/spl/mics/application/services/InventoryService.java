@@ -33,7 +33,7 @@ public class InventoryService extends MicroService{
 	@Override
 	protected void initialize() {
 		subscribeEvent(TakeFromInventoryEvent.class, this::processTake);
-		subscribeEvent(CheckAvailabilityEvent.class, this::precessCheck);
+		subscribeEvent(CheckAvailabilityEvent.class, this::processCheckAv);
 		subscribeBroadcast(PoisonPill.class, poison -> terminate());
 		countDownLatch.countDown();
 	}
@@ -45,8 +45,8 @@ public class InventoryService extends MicroService{
     }
 
 
-    private void precessCheck(CheckAvailabilityEvent checkEvent){
-		System.out.println("inside InventoryService.precessCheck()");
+    private void processCheckAv(CheckAvailabilityEvent checkEvent){
+		System.out.println("inside InventoryService.processCheckAv()");
 	    Integer price = inventory.checkAvailabiltyAndGetPrice(checkEvent.getBookName());
 	    complete(checkEvent, price);
     }

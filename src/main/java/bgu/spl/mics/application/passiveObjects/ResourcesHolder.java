@@ -26,8 +26,7 @@ public class ResourcesHolder {
     private Semaphore semaphore;
     private Queue<DeliveryVehicle> availableVehicles;
 
-    private ResourcesHolder() {
-    }
+    private ResourcesHolder() {}
     private static class SingletonHolder {
         private static ResourcesHolder instance = new ResourcesHolder();
     }
