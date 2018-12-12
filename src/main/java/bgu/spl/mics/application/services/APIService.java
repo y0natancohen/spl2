@@ -2,11 +2,11 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.BookOrderEvent;
+import bgu.spl.mics.application.messages.PoisonPill;
 import bgu.spl.mics.application.messages.TickBroadcast;
-import bgu.spl.mics.application.passiveObjects.Customer;
-import bgu.spl.mics.application.passiveObjects.Inventory;
-import bgu.spl.mics.application.passiveObjects.MoneyRegister;
-import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
+import bgu.spl.mics.application.passiveObjects.*;
+
+import java.util.concurrent.CountDownLatch;
 
 /**
  * APIService is in charge of the connection between a client and the store.
@@ -19,23 +19,42 @@ import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
  */
 public class APIService extends MicroService {
     private Customer customer;
+    private CountDownLatch countDownLatch;
 
-    public APIService() {
-        super("APIService");
-
+    public Customer getCustomer() {
+        return customer;
     }
 
-    public APIService(Customer customer) {
-        this();
+    public void setCustomer(Customer customer) {
         this.customer = customer;
+    }
+
+
+    public APIService(Customer customer, CountDownLatch countDownLatch) {
+        super("APIService " + customer.getId());
+        this.customer = customer;
+        this.countDownLatch = countDownLatch;
     }
 
     @Override
     protected void initialize() {
-        subscribeBroadcast(TickBroadcast.class, tickBroadcast -> customer.getOrderSchedule().stream()
-                .filter(orderSchedule -> orderSchedule.getTick() == tickBroadcast.getCurrentTick())
-                .forEach(relevantOrder ->
-                        sendEvent(new BookOrderEvent
-                                (relevantOrder.getBookTitle(), customer, relevantOrder.getTick()))));
+        subscribeBroadcast(PoisonPill.class, poison -> terminate());
+        subscribeBroadcast(TickBroadcast.class, tickBroadcast -> {
+            System.out.println(String.format("customer ordering now is: %s", customer));
+            customer.getOrderSchedule().stream()
+                    .filter(orderSchedule -> {
+                        System.out.println(String.format("order schedule tick is: %s broadcast tick is: %s",
+                                orderSchedule.getTick(), tickBroadcast.getCurrentTick()));
+                        return orderSchedule.getTick() == tickBroadcast.getCurrentTick();
+                    })
+                    .forEach(relevantOrder -> {
+                        BookOrderEvent bookOrderEvent =
+                                new BookOrderEvent(relevantOrder.getBookTitle(), customer, relevantOrder.getTick(),
+                                        IndexDispatcher.getInstance().getNextId());
+                        System.out.println(String.format("service: %s sending order event: %s", getName(), bookOrderEvent));
+                        sendEvent(bookOrderEvent);
+                    });
+        });
+        countDownLatch.countDown();
     }
 }

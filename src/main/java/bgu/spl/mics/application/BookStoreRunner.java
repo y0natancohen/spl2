@@ -6,9 +6,14 @@ import bgu.spl.mics.application.services.*;
 import com.google.gson.*;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * This is the Main class of the application. You should parse the input file,
@@ -25,51 +30,112 @@ public class BookStoreRunner {
         } catch (IOException e) {
             System.out.println("could not read config file");
         }
+
         Gson gson = new Gson();
         JsonObject allJsonObj = new JsonParser().parse(content).getAsJsonObject();
         loadStaticResources(gson, allJsonObj);
         // initiate other services
         JsonObject servicesJsonObj = allJsonObj.getAsJsonObject("services");
-        List<MicroService> services = extractServices(gson, servicesJsonObj);
+        int numOfServices = getNumOfServices(gson, servicesJsonObj);
+        CountDownLatch countDownLatch = new CountDownLatch(numOfServices);
+        List<MicroService> services = extractServices(gson, servicesJsonObj, countDownLatch);
         List<Thread> threadPool = new ArrayList<>(services.size());
         services.forEach(service -> {
             Thread thread = new Thread(service);
             threadPool.add(thread);
             thread.start();
         });
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            System.out.println("Something reeeeealy bad happend");
+        }
+        // initiate time service
         TimeService time = gson.fromJson(servicesJsonObj.get("time"), TimeService.class);
         Thread timeServiceThread = new Thread(time);
         timeServiceThread.start();
         try {
-            // waits for time service to terminate
             timeServiceThread.join();
         } catch (InterruptedException e) {
-            System.out.println("should not happen");
         }
-        // trigger interruption
-        threadPool.forEach(Thread::interrupt);
-        //todo:elad make sure all service initialize before time service
-        // initiate time service
-        //todo: write to output files
+        System.out.println("!!  after waiting for time!!");
+        System.out.println("system has " + threadPool.size());
+        threadPool.forEach(thread -> {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                System.out.println(String.format("failed joining: %s", e.getMessage()));
+            }
+        });
+
+        handleOutput(args, services);
     }
 
-    private static List<MicroService> extractServices(Gson gson, JsonObject servicesJsonObj) {
+    private static void handleOutput(String[] args, List<MicroService> services) {
+        List<APIService> apiServices = services.stream()
+                .filter(service -> service instanceof APIService)
+                .map(service -> (APIService) service)
+                .collect(Collectors.toList());
+        printCustomersInSystem(args[1], apiServices);
+        Inventory.getInstance().printInventoryToFile(args[2]);
+        MoneyRegister.getInstance().printOrderReceipts(args[3]);
+        printMoneyRegister(args[4]);
+    }
+
+    private static void printMoneyRegister(String fileName) {
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(fileName))) {
+            objectOutputStream.writeObject(MoneyRegister.getInstance());
+        } catch (IOException e) {
+            System.out.println("could not write books inventory");
+        }
+    }
+
+    private static void printCustomersInSystem(String fileName, List<APIService> apiServices) {
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(fileName))) {
+            Map<Integer, Customer> customerById = apiServices.stream()
+                    .map(APIService::getCustomer)
+                    .collect(Collectors.toMap(Customer::getId, Function.identity()));
+            objectOutputStream.writeObject(customerById);
+        } catch (IOException e) {
+            System.out.println("could not write books inventory");
+        }
+    }
+
+    private static int getNumOfServices(Gson gson, JsonObject servicesJsonObj) {
+        int counter = 0;
+        counter += gson.fromJson(servicesJsonObj.get("selling"), Integer.class);
+        counter += gson.fromJson(servicesJsonObj.get("inventoryService"), Integer.class);
+        counter += gson.fromJson(servicesJsonObj.get("logistics"), Integer.class);
+        counter += gson.fromJson(servicesJsonObj.get("resourcesService"), Integer.class);
+        List<Customer> customers = getArrayFromJson("customers", Customer[].class, servicesJsonObj, gson);
+        counter += customers.size();
+        return counter;
+    }
+
+    private static List<MicroService> extractServices(Gson gson, JsonObject servicesJsonObj, CountDownLatch countDownLatch) {
+        int seq = 1;
         List<MicroService> services = new LinkedList<>();
         for (int i = 0; i < gson.fromJson(servicesJsonObj.get("selling"), Integer.class); i++) {
-            services.add(new SellingService());
+            services.add(new SellingService(countDownLatch, seq));
+            seq++;
         }
         for (int i = 0; i < gson.fromJson(servicesJsonObj.get("inventoryService"), Integer.class); i++) {
-            services.add(new InventoryService());
+            services.add(new InventoryService(countDownLatch, seq));
+            seq++;
         }
         for (int i = 0; i < gson.fromJson(servicesJsonObj.get("logistics"), Integer.class); i++) {
-            services.add(new LogisticsService());
+            services.add(new LogisticsService(countDownLatch, seq));
+            seq++;
         }
         for (int i = 0; i < gson.fromJson(servicesJsonObj.get("resourcesService"), Integer.class); i++) {
-            services.add(new ResourceService());
+            services.add(new ResourceService(countDownLatch, seq));
+            seq++;
         }
         List<Customer> customers = getArrayFromJson("customers", Customer[].class, servicesJsonObj, gson);
         customers.sort(Comparator.comparing(Customer::getId));
-        customers.forEach(customer -> services.add(new APIService(customer)));
+        customers.forEach(customer -> {
+            services.add(new APIService(customer, countDownLatch));
+        });
         return services;
     }
 

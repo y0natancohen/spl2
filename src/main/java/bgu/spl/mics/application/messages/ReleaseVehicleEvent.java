@@ -4,7 +4,7 @@ import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
 
 import java.util.Objects;
 
-public class ReleaseVehicleEvent extends BaseEvent<Boolean> {
+public class ReleaseVehicleEvent extends FuturedEvent<Boolean> {
     private DeliveryVehicle vehicle;
 
     public DeliveryVehicle getVehicle() {

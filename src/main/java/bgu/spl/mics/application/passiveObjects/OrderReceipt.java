@@ -1,5 +1,7 @@
 package bgu.spl.mics.application.passiveObjects;
 
+import java.io.Serializable;
+
 /**
  * Passive data-object representing a receipt that should 
  * be sent to a customer after the completion of a BookOrderEvent.
@@ -7,7 +9,7 @@ package bgu.spl.mics.application.passiveObjects;
  * <p>
  * You may addIfAbcent fields and methods to this class as you see fit (including public methods).
  */
-public class OrderReceipt {
+public class OrderReceipt implements Serializable {
 
 	private int orderId;
 	private String seller;
@@ -17,18 +19,19 @@ public class OrderReceipt {
 	private int issuedTick;
 	private int orderTick;
 	private int proccessTick;
+	public OrderReceipt(){}
+	public OrderReceipt(int orderId, String seller, int customerId, String bookTitle, int price, int issuedTick, int orderTick, int proccessTick) {
+		this.orderId = orderId;
+		this.seller = seller;
+		this.customerId = customerId;
+		this.bookTitle = bookTitle;
+		this.price = price;
+		this.issuedTick = issuedTick;
+		this.orderTick = orderTick;
+		this.proccessTick = proccessTick;
+	}
 
-    public OrderReceipt(String seller, int customerId, String bookTitle, int orderTick) {
-        this.orderId = 0;  // TODO: decide where to generate this
-        this.seller = seller;
-        this.customerId = customerId;
-        this.bookTitle = bookTitle;
-        this.orderTick = orderTick;
-        this.price = 0; // TODO: get the price from somewhere
-    }
-
-
-    /**
+	/**
      * Retrieves the orderId of this receipt.
      */
 	public int getOrderId() {

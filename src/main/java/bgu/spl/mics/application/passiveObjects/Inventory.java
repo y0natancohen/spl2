@@ -1,12 +1,14 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 
 /**
@@ -66,6 +68,7 @@ public class Inventory {
      * second should reduce by one the number of books of the desired type.
      */
     public OrderResult take(String book) {
+        System.out.println("inside Inventory.take()");
         synchronized (getInstance()) {
             for (BookInventoryInfo bookInfo : bookInventoryInfos) {
                 if (bookInfo.getBookTitle().equals(book) && bookInfo.getAmountInInventory() > 0) {
@@ -86,7 +89,9 @@ public class Inventory {
      * @return the price of the book if it is available, -1 otherwise.
      */
     public int checkAvailabiltyAndGetPrice(String book) {
-        synchronized (getInstance()) {
+        System.out.println("inside Inventory.checkAvailabiltyAndGetPrice()");
+        if (getBookInfo(book) == null) return -1;
+        synchronized (getBookInfo(book)) {
             BookInventoryInfo bookInfo = getBookInfo(book);
             if ((bookInfo != null) && (bookInfo.getAmountInInventory() > 0)) {
                 return bookInfo.getPrice();
@@ -107,28 +112,22 @@ public class Inventory {
 
     /**
      * <p>
-     * Prints to a file name @filename a serialized object HashMap<String,Integer> which is a Map of all the books in the inventory. The keys of the Map (type {@link String})
+     * Prints to a file name @filename a serialized object HashMap<String,Integer> which is a Map of all the books in
+     * the inventory. The keys of the Map (type {@link String})
      * should be the titles of the books while the values (type {@link Integer}) should be
      * their respective available amount in the inventory.
      * This method is called by the main method in order to generate the output.
      */
 
-    public void printInventoryToFile(String filename) throws IOException {
-        Map<String, Integer> map = new HashMap<>();
-        File file = new File(filename);
-        FileOutputStream f = new FileOutputStream(file);
-        ObjectOutputStream s = new ObjectOutputStream(f);
-        try {
-            synchronized (getInstance()) {
-                for (BookInventoryInfo bookInfo : bookInventoryInfos) {
-                    map.put(bookInfo.getBookTitle(), bookInfo.getAmountInInventory());
-                }
-                s.writeObject(map);
-                s.close();
+    public void printInventoryToFile(String filename) {
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(filename))) {
+            Map<String, Integer> map = new HashMap<>();
+            for (BookInventoryInfo bookInfo : bookInventoryInfos) {
+                map.put(bookInfo.getBookTitle(), bookInfo.getAmountInInventory());
             }
-        } finally {
-            s.writeObject(map);
-            s.close();
+            objectOutputStream.writeObject(map);
+        } catch (IOException e) {
+            System.out.println("could not write books inventory");
         }
     }
 }

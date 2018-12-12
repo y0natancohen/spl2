@@ -4,6 +4,9 @@ import bgu.spl.mics.*;
 import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.passiveObjects.*;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+
 /**
  * Selling service in charge of taking orders from customers.
  * Holds a reference to the {@link MoneyRegister} singleton of the store.
@@ -15,34 +18,51 @@ import bgu.spl.mics.application.passiveObjects.*;
  * You MAY change constructor signatures and even addIfAbcent new public constructors.
  */
 public class SellingService extends MicroService {
+    private static final AtomicInteger timeTrack = new AtomicInteger();
+    private final MoneyRegister register = MoneyRegister.getInstance();
+    private CountDownLatch countDownLatch;
 
-    private MoneyRegister register = MoneyRegister.getInstance();
+    public SellingService(CountDownLatch countDownLatch, int seq) {
+        super("SellingService " + seq);
+        this.countDownLatch = countDownLatch;
 
-    public SellingService() {
-        super("SellingService");
     }
 
     @Override
     protected void initialize() {
         subscribeEvent(BookOrderEvent.class, this::proccessOrder);
+        subscribeBroadcast(TickBroadcast.class, tickBroadcast -> timeTrack.set(tickBroadcast.getCurrentTick()));
+        subscribeBroadcast(PoisonPill.class, poison -> terminate());
+        countDownLatch.countDown();
     }
 
 
     public void proccessOrder(BookOrderEvent bookOrderEvent) {
-        // todo sync parts of this
+        System.out.println("inside SellingService.proccessOrder()");
+        int processTick = timeTrack.get();
         OrderReceipt receipt = null;
         Integer price = getBookPrice(bookOrderEvent);
-        Customer customer = bookOrderEvent.getCustomer();
+        boolean success = false;
         if (price != -1) {
-            OrderResult result = tryTake(bookOrderEvent);
-            if (result == OrderResult.SUCCESSFULLY_TAKEN) {
-                register.chargeCreditCard(customer, price);
-                receipt = new OrderReceipt(this.getName(),
-                        customer.getId(),
-                        bookOrderEvent.getBookName(),
-                        bookOrderEvent.getOrderTick());
-                deliver(customer);
+            synchronized (bookOrderEvent.getCustomer()) { // 2 orders from same customer will be synced
+                if (bookOrderEvent.getCustomer().getCreditCard().getAmount() >= price) {
+                    OrderResult result = tryTake(bookOrderEvent);
+                    if (result == OrderResult.SUCCESSFULLY_TAKEN) {
+                        register.chargeCreditCard(bookOrderEvent.getCustomer(), price);
+                        success = true;
+                    }
+                }
             }
+        }
+        if (success) {
+            receipt = new OrderReceipt(bookOrderEvent.getOrderId(), this.getName(),
+                    bookOrderEvent.getCustomer().getId(),
+                    bookOrderEvent.getBookName(),
+                    price,
+                    timeTrack.get(),
+                    bookOrderEvent.getOrderTick(),
+                    processTick);
+            deliver(bookOrderEvent.getCustomer());
         }
         complete(bookOrderEvent, receipt);
     }

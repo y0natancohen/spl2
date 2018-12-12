@@ -20,7 +20,6 @@ public class CreditCard {
     }
 
     public void charge(int howMuch) {
-        //todo is this safe? research
         this.amount.addAndGet( - howMuch);
     }
 }

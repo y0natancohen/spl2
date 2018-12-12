@@ -1,6 +1,9 @@
 package bgu.spl.mics;
 
+import bgu.spl.mics.application.services.TimeService;
+
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -34,10 +37,9 @@ public abstract class MicroService implements Runnable {
      *             does not have to be unique)
      */
     public MicroService(String name) {
-        this.name = name + Thread.currentThread().getId();
+        this.name = name;
         this.eventToCallback = new ConcurrentHashMap<>();
         this.broadcastToCallback = new ConcurrentHashMap<>();
-        messageBus.register(this);
     }
 
     /**
@@ -147,6 +149,9 @@ public abstract class MicroService implements Runnable {
      */
     protected final void terminate() {
         this.terminated = true;
+        if (!(this instanceof TimeService)){
+            messageBus.unregister(this);
+        }
     }
 
     /**
@@ -158,12 +163,13 @@ public abstract class MicroService implements Runnable {
     }
 
     /**
-     * The entry point of the micro-service. TODO: you must complete this code
+     * The entry point of the micro-service.
      * otherwise you will end up in an infinite loop.
      */
     @Override
     public final void run() {
         System.out.println(getName() + " is initializing...");
+        messageBus.register(this);
         initialize();
         while (!terminated) {
             try {
@@ -176,8 +182,9 @@ public abstract class MicroService implements Runnable {
             } catch (InterruptedException e) {
                 terminated = true;
             }
+            System.out.println("im in loop my name is:" + getName());
         }
-        messageBus.unregister(this);
+        System.out.println("leaving" + getName());
     }
 
 }

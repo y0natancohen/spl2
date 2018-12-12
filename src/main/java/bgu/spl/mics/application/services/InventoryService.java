@@ -2,9 +2,14 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.CheckAvailabilityEvent;
+import bgu.spl.mics.application.messages.PoisonPill;
 import bgu.spl.mics.application.messages.TakeFromInventoryEvent;
 import bgu.spl.mics.application.passiveObjects.Inventory;
+import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.OrderResult;
+import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
+
+import java.util.concurrent.CountDownLatch;
 
 /**
  * InventoryService is in charge of the book inventory and stock.
@@ -17,26 +22,31 @@ import bgu.spl.mics.application.passiveObjects.OrderResult;
  */
 
 public class InventoryService extends MicroService{
-
     private static Inventory inventory = Inventory.getInstance();
+	private CountDownLatch countDownLatch;
 
-	public InventoryService() {
-		super("InventoryService");
+	public InventoryService(CountDownLatch countDownLatch, int seq) {
+		super("InventoryService " + seq);
+		this.countDownLatch = countDownLatch;
 	}
 
 	@Override
 	protected void initialize() {
 		subscribeEvent(TakeFromInventoryEvent.class, this::processTake);
 		subscribeEvent(CheckAvailabilityEvent.class, this::precessCheck);
+		subscribeBroadcast(PoisonPill.class, poison -> terminate());
+		countDownLatch.countDown();
 	}
 
 	private void processTake(TakeFromInventoryEvent takeEvent){
-	    OrderResult orderResult = inventory.take(takeEvent.getBookName());
+		System.out.println("inside InventoryService.processTake()");
+		OrderResult orderResult = inventory.take(takeEvent.getBookName());
 	    complete(takeEvent, orderResult);
     }
 
 
     private void precessCheck(CheckAvailabilityEvent checkEvent){
+		System.out.println("inside InventoryService.precessCheck()");
 	    Integer price = inventory.checkAvailabiltyAndGetPrice(checkEvent.getBookName());
 	    complete(checkEvent, price);
     }

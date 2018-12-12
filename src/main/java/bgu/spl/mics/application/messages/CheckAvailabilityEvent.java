@@ -2,7 +2,7 @@ package bgu.spl.mics.application.messages;
 
 import java.util.Objects;
 
-public class CheckAvailabilityEvent extends BaseEvent<Integer> {
+public class CheckAvailabilityEvent extends FuturedEvent<Integer> {
     private String bookName;
 
     public CheckAvailabilityEvent(String bookName) {

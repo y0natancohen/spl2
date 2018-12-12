@@ -3,11 +3,15 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.AcquireVehicleEvent;
 import bgu.spl.mics.application.messages.DeliveryEvent;
+import bgu.spl.mics.application.messages.PoisonPill;
 import bgu.spl.mics.application.messages.ReleaseVehicleEvent;
 import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
 import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Logistic service in charge of delivering books that have been purchased to customers.
@@ -19,17 +23,22 @@ import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
  * You MAY change constructor signatures and even addIfAbcent new public constructors.
  */
 public class LogisticsService extends MicroService {
+	private CountDownLatch countDownLatch;
 
-	public LogisticsService() {
-		super("LogisticsService");
+	public LogisticsService(CountDownLatch countDownLatch, int seq) {
+		super("LogisticsService " + seq);
+		this.countDownLatch = countDownLatch;
 	}
 
 	@Override
 	protected void initialize() {
 		subscribeEvent(DeliveryEvent.class, this::processDelivery);
+		subscribeBroadcast(PoisonPill.class, poison -> terminate());
+		countDownLatch.countDown();
 	}
 
 	private void processDelivery(DeliveryEvent deliveryEvent){
+		System.out.println("inside LogisticsService.processDelivery()");
 		DeliveryVehicle vehicle = sendEvent(new AcquireVehicleEvent()).get();
 		vehicle.deliver(deliveryEvent.getAddress(), deliveryEvent.getDistance());
 		sendEvent(new ReleaseVehicleEvent(vehicle));

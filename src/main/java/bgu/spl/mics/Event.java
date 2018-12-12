@@ -9,7 +9,7 @@ package bgu.spl.mics;
  */
 public interface Event<T> extends Message {
     default Future<T> getFuture() {
-        return null;
+        return new Future<>();
     }
 
     default void setFuture(Future<T> future) {

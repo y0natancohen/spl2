@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
+import java.io.*;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <p>
  * You can addIfAbcent ONLY private fields and methods to this class as you see fit.
  */
-public class MoneyRegister {
+public class MoneyRegister implements Serializable{
 
     /**
      * Retrieves the single instance of this class.
@@ -74,6 +75,10 @@ public class MoneyRegister {
      * This method is called by the main method in order to generate the output..
      */
     public void printOrderReceipts(String filename) {
-        //TODO: Implement this
+        try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(filename))) {
+            objectOutputStream.writeObject(orderReceipts);
+        } catch (IOException e) {
+            System.out.println("could not write money register");
+        }
     }
 }

@@ -2,7 +2,7 @@ package bgu.spl.mics.application.messages;
 
 import java.util.Objects;
 
-public class DeliveryEvent extends BaseEvent<Boolean> {
+public class DeliveryEvent extends FuturedEvent<Boolean> {
     private String address;
     private int distance;
 
