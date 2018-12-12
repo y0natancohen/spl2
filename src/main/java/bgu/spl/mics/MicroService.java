@@ -1,5 +1,7 @@
 package bgu.spl.mics;
 
+import bgu.spl.mics.application.services.TimeService;
+
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -147,7 +149,9 @@ public abstract class MicroService implements Runnable {
      */
     protected final void terminate() {
         this.terminated = true;
-        messageBus.unregister(this);
+        if (!(this instanceof TimeService)){
+            messageBus.unregister(this);
+        }
     }
 
     /**
