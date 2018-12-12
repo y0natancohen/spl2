@@ -48,6 +48,7 @@ public class ResourcesHolder {
         if (semaphore.tryAcquire()) {
             future.resolve(availableVehicles.poll());
         }
+        // todo : i think no one is resolving this future
         return future;
     }
 
