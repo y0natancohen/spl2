@@ -62,6 +62,7 @@ public class SellingService extends MicroService {
                     timeTrack.get(),
                     bookOrderEvent.getOrderTick(),
                     processTick);
+            bookOrderEvent.getCustomer().addReciept(receipt);
             moneyRegister.file(receipt);
             deliver(bookOrderEvent.getCustomer());
         }

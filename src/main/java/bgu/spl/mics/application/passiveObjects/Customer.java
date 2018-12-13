@@ -35,6 +35,9 @@ public class Customer implements Serializable {
         this.creditCard = creditCard;
     }
 
+    public void addReciept(OrderReceipt receipt){
+    	receipts.add(receipt);
+	}
     public List<OrderSchedule> getOrderSchedule() {
         return orderSchedule;
     }
