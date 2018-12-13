@@ -1,6 +1,7 @@
 package bgu.spl.mics;
 
 import bgu.spl.mics.application.passiveObjects.RotatingQueue;
+import bgu.spl.mics.application.services.TimeService;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -124,8 +125,10 @@ public class MessageBusImpl implements MessageBus {
             }
         }
         serviceToQueue.remove(m.getName());
-        removeFromValues(eventTypeToServices, m);
-        removeFromValues(broadcastToServices, m);
+        if (!(m instanceof TimeService)){
+            removeFromValues(eventTypeToServices, m);
+            removeFromValues(broadcastToServices, m);
+        }
     }
 
 
@@ -150,6 +153,14 @@ public class MessageBusImpl implements MessageBus {
     public Message awaitMessage(MicroService m) throws InterruptedException {
         BlockingQueue<Message> serviceQ = serviceToQueue.get(m.getName());
         return serviceQ.take();
+    }
+
+    // todo remove this func
+    public void printStuff(){
+        System.out.println(serviceToQueue.toString());
+        System.out.println(eventTypeToServices.toString());
+        System.out.println(broadcastToServices.toString());
+        System.out.println(broadcastToServices.toString());
     }
 
 

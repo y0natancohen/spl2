@@ -1,5 +1,6 @@
 package bgu.spl.mics.application;
 
+import bgu.spl.mics.MessageBusImpl;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.passiveObjects.*;
 import bgu.spl.mics.application.services.*;
@@ -69,6 +70,25 @@ public class BookStoreRunner {
         });
 
         handleOutput(args, services);
+        printStuffForUs(services);
+    }
+
+    private static void printStuffForUs(List<MicroService> services) {
+        System.out.println("");
+        System.out.println("");
+        List<APIService> apiServices = services.stream()
+                .filter(service -> service instanceof APIService)
+                .map(service -> (APIService) service)
+                .collect(Collectors.toList());
+        Map<String, Integer> customerById = apiServices.stream()
+                .map(APIService::getCustomer)
+                .collect(Collectors.toMap(customer -> customer.getName(), customer -> customer.getCreditCard().getAmount()));
+        System.out.println("customers:");
+        System.out.println(customerById.toString());
+        System.out.println("total earnings: " + MoneyRegister.getInstance().getTotalEarnings());
+        System.out.println("Inventory:");
+        Inventory.getInstance().printInventory();
+        MessageBusImpl.getInstance().printStuff();
     }
 
     private static void handleOutput(String[] args, List<MicroService> services) {

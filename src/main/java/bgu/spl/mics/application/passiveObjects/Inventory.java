@@ -130,4 +130,11 @@ public class Inventory {
             System.out.println("could not write books inventory");
         }
     }
+
+    // todo: delete this func
+    public void printInventory() {
+        for (BookInventoryInfo bookInfo : bookInventoryInfos) {
+            System.out.println(bookInfo.getBookTitle() + " : " + bookInfo.getAmountInInventory());
+        }
+    }
 }
