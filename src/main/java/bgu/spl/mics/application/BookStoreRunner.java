@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
  */
 public class BookStoreRunner {
     public static void main(String[] args) {
-
         String configFilePath = args[0];
         String content = "";
         try {
@@ -35,7 +34,6 @@ public class BookStoreRunner {
         } catch (IOException e) {
             System.out.println("could not read config file");
         }
-
         Gson gson = new Gson();
         JsonObject allJsonObj = new JsonParser().parse(content).getAsJsonObject();
         loadStaticResources(gson, allJsonObj);
@@ -56,6 +54,12 @@ public class BookStoreRunner {
             System.out.println("Something reeeeealy bad happend");
         }
         // initiate time service
+        runSystem(gson, servicesJsonObj, threadPool);
+        handleOutput(args, services);
+        printStuffForUs(services);
+    }
+
+    private static void runSystem(Gson gson, JsonObject servicesJsonObj, List<Thread> threadPool) {
         TimeService timeService = gson.fromJson(servicesJsonObj.get("time"), TimeService.class);
         Thread timeServiceThread = new Thread(timeService);
         timeServiceThread.start();
@@ -68,21 +72,18 @@ public class BookStoreRunner {
                 System.out.println("!!!!! was interupted while waiting for threads to join!!!");
             }
         });
-
-        handleOutput(args, services);
-        printStuffForUs(services);
     }
 
     private static void printStuffForUs(List<MicroService> services) {
-        System.out.println("");
-        System.out.println("");
+        System.out.println();
+        System.out.println();
         List<APIService> apiServices = services.stream()
                 .filter(service -> service instanceof APIService)
                 .map(service -> (APIService) service)
                 .collect(Collectors.toList());
         Map<String, Integer> customerById = apiServices.stream()
                 .map(APIService::getCustomer)
-                .collect(Collectors.toMap(customer -> customer.getName(), customer -> customer.getCreditCard().getAmount()));
+                .collect(Collectors.toMap(Customer::getName, customer -> customer.getCreditCard().getAmount()));
         System.out.println("customers:");
         System.out.println(customerById.toString());
         System.out.println("total earnings: " + MoneyRegister.getInstance().getTotalEarnings());
@@ -106,7 +107,6 @@ public class BookStoreRunner {
         try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(fileName))) {
             objectOutputStream.writeObject(MoneyRegister.getInstance());
         } catch (IOException e) {
-//            e.printStackTrace();
             System.out.println("could not write money register");
         }
     }
