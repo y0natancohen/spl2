@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
  */
 public class BookStoreRunner {
     public static void main(String[] args) {
-
         String configFilePath = args[0];
         String content = "";
         try {
@@ -34,7 +33,6 @@ public class BookStoreRunner {
         } catch (IOException e) {
             System.out.println("could not read config file");
         }
-
         Gson gson = new Gson();
         JsonObject allJsonObj = new JsonParser().parse(content).getAsJsonObject();
         loadStaticResources(gson, allJsonObj);
@@ -55,6 +53,11 @@ public class BookStoreRunner {
             System.out.println("Something reeeeealy bad happend");
         }
         // initiate time service
+        runSystem(gson, servicesJsonObj, threadPool);
+        handleOutput(args, services);
+    }
+
+    private static void runSystem(Gson gson, JsonObject servicesJsonObj, List<Thread> threadPool) {
         TimeService timeService = gson.fromJson(servicesJsonObj.get("time"), TimeService.class);
         Thread timeServiceThread = new Thread(timeService);
         timeServiceThread.start();
@@ -67,8 +70,6 @@ public class BookStoreRunner {
                 System.out.println("!!!!! was interupted while waiting for threads to join!!!");
             }
         });
-
-        handleOutput(args, services);
     }
 
     private static void handleOutput(String[] args, List<MicroService> services) {
@@ -86,7 +87,6 @@ public class BookStoreRunner {
         try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(fileName))) {
             objectOutputStream.writeObject(MoneyRegister.getInstance());
         } catch (IOException e) {
-//            e.printStackTrace();
             System.out.println("could not write money register");
         }
     }
