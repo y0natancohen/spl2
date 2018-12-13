@@ -64,7 +64,7 @@ public class BookStoreRunner {
             try {
                 thread.join();
             } catch (InterruptedException e) {
-                System.out.println(String.format("failed joining: %s", e.getMessage()));
+                System.out.println("!!!!! was interupted while waiting for threads to join!!!");
             }
         });
 
@@ -96,7 +96,7 @@ public class BookStoreRunner {
             Map<Integer, Customer> customerById = apiServices.stream()
                     .map(APIService::getCustomer)
                     .collect(Collectors.toMap(Customer::getId, Function.identity()));
-            System.out.println(customerById.toString());
+//            System.out.println(customerById.toString());
             objectOutputStream.writeObject(customerById);
         } catch (IOException e) {
 //            e.printStackTrace();

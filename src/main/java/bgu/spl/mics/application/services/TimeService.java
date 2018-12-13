@@ -51,6 +51,11 @@ public class TimeService extends MicroService {
     }
 
     private void killingSpree(){
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         System.out.println("killing spree!!!!");
         for(Thread t : threads){
             t.interrupt();
@@ -74,12 +79,7 @@ public class TimeService extends MicroService {
                     timer.cancel();
                     timer.purge();
 
-                    killer.start();
-                    try {
-                        killer.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+//                    killer.start();
                 }
             }
         };

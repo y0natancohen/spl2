@@ -82,7 +82,7 @@ public class MessageBusImpl implements MessageBus {
 //                System.out.println(serviceToQueue.toString());
 //                System.out.println("--------------------------------------");
             } catch (InterruptedException e) {
-                System.out.println(String.format("MessageBusImp.sendBroadcast interrupted: %s", e.getMessage()));
+                System.out.println("!!!!! was interupted while waiting for put in broadcast queue!!!");
             }
         });
     }
@@ -99,7 +99,7 @@ public class MessageBusImpl implements MessageBus {
         try {
             events.put(e);
         } catch (InterruptedException e1) {
-            System.out.println(String.format("MessageBusImp.sendEvent interrupted: %s", e1.getMessage()));
+            System.out.println("!!!!! was interupted while waiting to put in event queue!!!");
         }
         return future;
     }

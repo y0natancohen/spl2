@@ -185,6 +185,7 @@ public abstract class MicroService implements Runnable {
                     broadcastToCallback.get(message.getClass()).call(message);
                 }
             } catch (InterruptedException e) {
+                System.out.println("!!!!! "+this.name+" was interupted while waiting for a new message in the queue!!!");
                 terminated = true;
             }
         }

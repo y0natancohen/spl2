@@ -48,11 +48,11 @@ public class DeliveryVehicle {
     public void deliver(String address, int distance) {
         int t = distance / this.speed;
         try {
-            System.out.println("i am going to sleep " + t + " micro seconds");
+            System.out.println("i am going to sleep " + t + " milli seconds");
             Thread.sleep(t);
             System.out.println("sleep time is over");
         } catch (InterruptedException e) {
-            System.out.println(String.format("vehicle with license: %d was interrupted... keep driving", license));
+            System.out.println("!!!!! was interupted while waiting for vehicle to deliver!!!");
         }
     }
 }

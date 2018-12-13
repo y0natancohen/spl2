@@ -39,7 +39,7 @@ public class Future<T> {
                     this.wait();
                 }
             } catch (InterruptedException e) {
-                System.out.println("got error message in future: " + e.getMessage());
+                System.out.println("!!!!! was interupted while waiting for future to resolve!!!");
             }
             return result;
         }
@@ -85,7 +85,7 @@ public class Future<T> {
                     this.wait(milli);
                 }
             } catch (InterruptedException e) {
-                System.out.println("got error message in future: " + e.getMessage());
+                System.out.println("!!!!! was interupted while waiting for future timeout to resolve!!!");
             }
             return result;
         }
