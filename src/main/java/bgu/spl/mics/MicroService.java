@@ -3,11 +3,7 @@ package bgu.spl.mics;
 import bgu.spl.mics.application.messages.PoisonPill;
 import bgu.spl.mics.application.services.TimeService;
 
-import javax.print.attribute.standard.PDLOverrideSupported;
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadMXBean;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**

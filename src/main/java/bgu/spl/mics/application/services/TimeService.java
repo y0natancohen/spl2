@@ -7,7 +7,6 @@ import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.MoneyRegister;
 import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
 
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
