@@ -24,8 +24,12 @@ import java.util.stream.Collectors;
  * create the different instances of the objects, and run the system.
  * In the end, you should output serialized objects.
  */
+
+
 public class BookStoreRunner {
+    public static boolean debug = false;
     public static void main(String[] args) {
+        System.out.println("starting...");
         String configFilePath = args[0];
         String content = "";
         try {
@@ -56,17 +60,17 @@ public class BookStoreRunner {
         // initiate time service
         runSystem(gson, servicesJsonObj, threadPool);
         handleOutput(args, services);
-        printStuffForUs(services);
+//        printStuffForUs(services);
     }
 
     private static void runSystem(Gson gson, JsonObject servicesJsonObj, List<Thread> threadPool) {
         TimeService timeService = gson.fromJson(servicesJsonObj.get("time"), TimeService.class);
         Thread timeServiceThread = new Thread(timeService);
         timeServiceThread.start();
-        System.out.println("system has " + threadPool.size());
+        if (BookStoreRunner.debug){System.out.println("system has " + threadPool.size());}
         threadPool.forEach(thread -> {
             try {
-                System.out.println(String.format("joining thread is: %s", thread.getName()));
+                if (BookStoreRunner.debug){System.out.println(String.format("joining thread is: %s", thread.getName()));}
                 thread.join();
             } catch (InterruptedException e) {
                 System.out.println("!!!!! was interupted while waiting for threads to join!!!");

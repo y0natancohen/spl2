@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.BookStoreRunner;
 import bgu.spl.mics.application.messages.*;
 import bgu.spl.mics.application.passiveObjects.*;
 
@@ -38,7 +39,7 @@ public class SellingService extends MicroService {
 
 
     public void processOrder(BookOrderEvent bookOrderEvent) {
-        System.out.println("inside SellingService.processOrder()");
+        if (BookStoreRunner.debug){System.out.println("inside SellingService.processOrder()");}
         int processTick = timeTrack.get();
         OrderReceipt receipt = null;
         Integer price = getBookPrice(bookOrderEvent);

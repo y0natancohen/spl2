@@ -1,5 +1,7 @@
 package bgu.spl.mics.application.passiveObjects;
 
+import bgu.spl.mics.application.BookStoreRunner;
+
 /**
  * Passive data-object representing a delivery vehicle of the store.
  * You must not alter any of the given public methods of this class.
@@ -48,9 +50,9 @@ public class DeliveryVehicle {
     public void deliver(String address, int distance) {
         int t = distance / this.speed;
         try {
-            System.out.println("i am going to sleep " + t + " milli seconds");
+            if (BookStoreRunner.debug){System.out.println("i am going to sleep " + t + " milli seconds");}
             Thread.sleep(t);
-            System.out.println("sleep time is over");
+            if (BookStoreRunner.debug){System.out.println("sleep time is over");}
         } catch (InterruptedException e) {
             System.out.println("!!!!! was interupted while waiting for vehicle to deliver!!!");
         }

@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.BookStoreRunner;
 import bgu.spl.mics.application.messages.BookOrderEvent;
 import bgu.spl.mics.application.messages.PoisonPill;
 import bgu.spl.mics.application.messages.TickBroadcast;
@@ -46,7 +47,7 @@ public class APIService extends MicroService {
                         return orderSchedule.getTick() == tickBroadcast.getCurrentTick();
                     })
                     .forEach(relevantOrder -> {
-                        System.out.println(String.format("customer ordering now is: %s", customer));
+                        if (BookStoreRunner.debug){System.out.println(String.format("customer ordering now is: %s", customer));}
                         BookOrderEvent bookOrderEvent =
                                 new BookOrderEvent(relevantOrder.getBookTitle(), customer, relevantOrder.getTick(),
                                         IndexDispatcher.getInstance().getNextId());

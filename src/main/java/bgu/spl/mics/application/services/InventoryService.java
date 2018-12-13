@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.BookStoreRunner;
 import bgu.spl.mics.application.messages.CheckAvailabilityEvent;
 import bgu.spl.mics.application.messages.PoisonPill;
 import bgu.spl.mics.application.messages.TakeFromInventoryEvent;
@@ -39,14 +40,14 @@ public class InventoryService extends MicroService{
 	}
 
 	private void processTake(TakeFromInventoryEvent takeEvent){
-		System.out.println("inside InventoryService.processTake()");
+		if (BookStoreRunner.debug){System.out.println("inside InventoryService.processTake()");}
 		OrderResult orderResult = inventory.take(takeEvent.getBookName());
 	    complete(takeEvent, orderResult);
     }
 
 
     private void processCheckAv(CheckAvailabilityEvent checkEvent){
-		System.out.println("inside InventoryService.processCheckAv()");
+		if (BookStoreRunner.debug){System.out.println("inside InventoryService.processCheckAv()");}
 	    Integer price = inventory.checkAvailabiltyAndGetPrice(checkEvent.getBookName());
 	    complete(checkEvent, price);
     }

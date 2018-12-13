@@ -28,5 +28,8 @@ hs_err_pid*
 *.txt
 *.iml
 *.json
+*.sh
+
+*.obj
 spl191BookStore.iml
 src/main/java/config.json

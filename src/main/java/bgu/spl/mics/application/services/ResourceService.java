@@ -2,6 +2,7 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.BookStoreRunner;
 import bgu.spl.mics.application.messages.AcquireVehicleEvent;
 import bgu.spl.mics.application.messages.PoisonPill;
 import bgu.spl.mics.application.messages.ReleaseVehicleEvent;
@@ -54,13 +55,13 @@ public class ResourceService extends MicroService {
     }
 
     private void release(ReleaseVehicleEvent releaseEvent) {
-        System.out.println("inside ResourceService.release()");
+        if (BookStoreRunner.debug){System.out.println("inside ResourceService.release()");}
         resources.releaseVehicle(releaseEvent.getVehicle());
         complete(releaseEvent, true);
     }
 
     private void aquire(AcquireVehicleEvent aquireEvent) {
-        System.out.println("inside ResourceService.aquire()");
+        if (BookStoreRunner.debug){System.out.println("inside ResourceService.aquire()");}
         Future<DeliveryVehicle> deliveryVehicleFuture = resources.acquireVehicle();
         futuresLog.add(deliveryVehicleFuture);
         complete(aquireEvent, deliveryVehicleFuture);
