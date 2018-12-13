@@ -73,29 +73,38 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void sendBroadcast(Broadcast b) {
-        broadcastToServices.get(b.getClass()).forEach(microService -> {
-            BlockingQueue<Message> currentQ = serviceToQueue.get(microService.getName());
-            try {
-                currentQ.put(b);
-            } catch (InterruptedException e) {
-                System.out.println("!!!!! was interupted while waiting for put in broadcast queue!!!");
-            }
-        });
+        Queue<MicroService> services = broadcastToServices.get(b.getClass());
+        if (services != null){ // otherwise no one cares about this broadcast
+            services.forEach(microService -> {
+                BlockingQueue<Message> currentQ = serviceToQueue.get(microService.getName());
+                try {
+                    currentQ.put(b);
+                } catch (InterruptedException e) {
+                    System.out.println("!!!!! was interupted while waiting for put in broadcast queue!!!");
+                }
+            });
+        }
+
     }
 
 
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
         RotatingQueue<MicroService> services = eventTypeToServices.get(e.getClass());
-        MicroService service = services.getAndRotate();
-        BlockingQueue<Message> events = serviceToQueue.get(service.getName());
         Future<T> future = new Future<>();
         e.setFuture(future);
-        try {
-            events.put(e);
-        } catch (InterruptedException e1) {
-            System.out.println("!!!!! was interupted while waiting to put in event queue!!!");
+        if (services == null){ // no one cares about this event, so no result as well
+            future.resolve(null);
+        }else{
+            MicroService service = services.getAndRotate();
+            BlockingQueue<Message> events = serviceToQueue.get(service.getName());
+            try {
+                events.put(e);
+            } catch (InterruptedException e1) {
+                System.out.println("!!!!! was interupted while waiting to put in event queue!!!");
+            }
         }
+
         return future;
     }
 

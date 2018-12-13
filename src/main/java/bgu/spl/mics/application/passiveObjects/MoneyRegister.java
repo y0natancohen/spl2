@@ -2,6 +2,7 @@ package bgu.spl.mics.application.passiveObjects;
 
 
 import java.io.*;
+import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -45,7 +46,6 @@ public class MoneyRegister implements Serializable{
      * @param r The receipt to save in the money register.
      */
     public void file(OrderReceipt r) {
-        // todo sync here?
         orderReceipts.add(r);
         total.addAndGet(r.getPrice());
     }
@@ -64,7 +64,6 @@ public class MoneyRegister implements Serializable{
      * @param amount amount to charge
      */
     public void chargeCreditCard(Customer c, int amount) {
-        // TODO: sync here?
         CreditCard card = c.getCreditCard();
         card.charge(amount);
     }
@@ -76,7 +75,7 @@ public class MoneyRegister implements Serializable{
      */
     public void printOrderReceipts(String filename) {
         try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(filename))) {
-            objectOutputStream.writeObject(orderReceipts);
+            objectOutputStream.writeObject(new LinkedList<>(orderReceipts));
         } catch (IOException e) {
             System.out.println("could not write money register");
         }

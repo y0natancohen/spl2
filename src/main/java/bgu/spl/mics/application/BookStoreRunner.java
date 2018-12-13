@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.concurrent.CountDownLatch;
@@ -22,6 +23,7 @@ import java.util.concurrent.CountDownLatch;
  */
 public class BookStoreRunner {
     public static void main(String[] args) {
+
         String configFilePath = args[0];
         String content = "";
         try {
@@ -91,7 +93,6 @@ public class BookStoreRunner {
             Map<Integer, Customer> customerById = apiServices.stream()
                     .map(APIService::getCustomer)
                     .collect(Collectors.toMap(Customer::getId, Function.identity()));
-            System.out.println(customerById.toString());
             objectOutputStream.writeObject(customerById);
         } catch (IOException e) {
             e.printStackTrace();
@@ -130,6 +131,7 @@ public class BookStoreRunner {
             seq++;
         }
         List<Customer> customers = getArrayFromJson("customers", Customer[].class, servicesJsonObj, gson);
+        customers.forEach(Customer::initRecipts);
         customers.sort(Comparator.comparing(Customer::getId));
         customers.forEach(customer -> {
             services.add(new APIService(customer, countDownLatch));

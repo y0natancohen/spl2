@@ -176,7 +176,6 @@ public abstract class MicroService implements Runnable {
         messageBus.register(this);
         initialize();
         while (!terminated) {
-            System.out.println(this.name + "is alive");;
             try {
                 Message message = messageBus.awaitMessage(this);
                 if (message instanceof Event) {

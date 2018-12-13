@@ -1,7 +1,10 @@
 package bgu.spl.mics.application.passiveObjects;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 /**
  * Passive data-object representing a customer of the store.
@@ -11,16 +14,13 @@ import java.util.List;
  */
 public class Customer implements Serializable {
 
-	/**
-     * Retrieves the name of the customer.
-     */
-
 	private int id;
 	private String name;
 	private String address;
 	private int distance;
 	private CreditCard creditCard;
 	private List<OrderSchedule> orderSchedule;
+	private Queue<OrderReceipt> receipts;
 
     public CreditCard getCreditCard() {
         return this.creditCard;
@@ -43,11 +43,26 @@ public class Customer implements Serializable {
         this.orderSchedule = orderSchedule;
     }
 
+    /**
+     * Retrieves the name of the customer.
+     */
     public String getName() {
 		return name;
 	}
 
-	/**
+	public void initRecipts(){
+        this.receipts = new ConcurrentLinkedDeque<>();
+    }
+
+    public Queue<OrderReceipt> getReceipts() {
+        return receipts;
+    }
+
+    public void setReceipts(Queue<OrderReceipt> receipts) {
+        this.receipts = receipts;
+    }
+
+    /**
      * Retrieves the ID of the customer  . 
      */
 	public int getId() {
@@ -75,8 +90,7 @@ public class Customer implements Serializable {
      * @return A list of receipts.
      */
 	public List<OrderReceipt> getCustomerReceiptList() {
-		// TODO Implement this
-		return null;
+		return new ArrayList<>(this.receipts);
 	}
 	
 	/**

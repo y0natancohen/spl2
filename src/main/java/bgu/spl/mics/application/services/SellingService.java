@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class SellingService extends MicroService {
     private static final AtomicInteger timeTrack = new AtomicInteger();
-    private final MoneyRegister register = MoneyRegister.getInstance();
+    private final MoneyRegister moneyRegister = MoneyRegister.getInstance();
     private CountDownLatch countDownLatch;
 
     public SellingService(CountDownLatch countDownLatch, int seq) {
@@ -30,15 +30,15 @@ public class SellingService extends MicroService {
 
     @Override
     protected void initialize() {
-        subscribeEvent(BookOrderEvent.class, this::proccessOrder);
+        subscribeEvent(BookOrderEvent.class, this::processOrder);
         subscribeBroadcast(TickBroadcast.class, tickBroadcast -> timeTrack.set(tickBroadcast.getCurrentTick()));
         subscribeBroadcast(PoisonPill.class, poison -> terminate());
         countDownLatch.countDown();
     }
 
 
-    public void proccessOrder(BookOrderEvent bookOrderEvent) {
-        System.out.println("inside SellingService.proccessOrder()");
+    public void processOrder(BookOrderEvent bookOrderEvent) {
+        System.out.println("inside SellingService.processOrder()");
         int processTick = timeTrack.get();
         OrderReceipt receipt = null;
         Integer price = getBookPrice(bookOrderEvent);
@@ -48,7 +48,7 @@ public class SellingService extends MicroService {
                 if (bookOrderEvent.getCustomer().getCreditCard().getAmount() >= price) {
                     OrderResult result = tryTake(bookOrderEvent);
                     if (result == OrderResult.SUCCESSFULLY_TAKEN) {
-                        register.chargeCreditCard(bookOrderEvent.getCustomer(), price);
+                        moneyRegister.chargeCreditCard(bookOrderEvent.getCustomer(), price);
                         success = true;
                     }
                 }
@@ -62,6 +62,7 @@ public class SellingService extends MicroService {
                     timeTrack.get(),
                     bookOrderEvent.getOrderTick(),
                     processTick);
+            moneyRegister.file(receipt);
             deliver(bookOrderEvent.getCustomer());
         }
         complete(bookOrderEvent, receipt);

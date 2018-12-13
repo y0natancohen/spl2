@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.passiveObjects;
 
 import bgu.spl.mics.Future;
+import com.sun.org.apache.xerces.internal.impl.dv.DVFactoryException;
 
 import java.util.Arrays;
 import java.util.Queue;
@@ -25,8 +26,12 @@ public class ResourcesHolder {
      */
     private Semaphore semaphore;
     private Queue<DeliveryVehicle> availableVehicles;
+    private Queue<Future<DeliveryVehicle>> waitingFutures;
 
-    private ResourcesHolder() {}
+    private ResourcesHolder() {
+        this.waitingFutures = new ConcurrentLinkedQueue<>();
+    }
+
     private static class SingletonHolder {
         private static ResourcesHolder instance = new ResourcesHolder();
     }
@@ -47,8 +52,10 @@ public class ResourcesHolder {
         Future<DeliveryVehicle> future = new Future<>();
         if (semaphore.tryAcquire()) {
             future.resolve(availableVehicles.poll());
+        }else {
+            waitingFutures.add(future);
         }
-        // todo : i think no one is resolving this future
+
         return future;
     }
 
@@ -62,6 +69,10 @@ public class ResourcesHolder {
     public void releaseVehicle(DeliveryVehicle vehicle) {
         availableVehicles.add(vehicle);
         semaphore.release();
+        Future<DeliveryVehicle> deliveryVehicleFuture = waitingFutures.poll();
+        if (deliveryVehicleFuture != null){
+            deliveryVehicleFuture.resolve(vehicle);
+        }
     }
 
     /**
