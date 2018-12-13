@@ -43,7 +43,7 @@ public class SellingService extends MicroService {
         OrderReceipt receipt = null;
         Integer price = getBookPrice(bookOrderEvent);
         boolean success = false;
-        if (price != -1) {
+        if (price != -1 && bookOrderEvent.getCustomer().getCreditCard().getAmount() >= price) {
             synchronized (bookOrderEvent.getCustomer()) { // 2 orders from same customer will be synced
                 if (bookOrderEvent.getCustomer().getCreditCard().getAmount() >= price) {
                     OrderResult result = tryTake(bookOrderEvent);
