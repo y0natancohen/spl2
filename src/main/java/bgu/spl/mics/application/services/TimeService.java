@@ -25,7 +25,6 @@ public class TimeService extends MicroService {
     private int speed;
     private int duration;
     private int tickCount = 1;
-    private List<Thread> threads;
 
     public int getSpeed() {
         return speed;
@@ -34,38 +33,22 @@ public class TimeService extends MicroService {
     public int getDuration() {
         return duration;
     }
-//    private static class SingletonHolder {
-//        private static MicroService instance = new TimeService();
-//    }
-
-//    public static MicroService getInstance() {
-//        return SingletonHolder.instance;
-//    }
-
-    // we are responsible for creating only one
-    public TimeService(List<Thread> threads, int speed, int duration) {
-        super("TimeService");
-        this.threads = threads;
-        this.speed = speed;
-        this.duration = duration;
+    private static class SingletonHolder {
+        private static MicroService instance = new TimeService();
     }
 
-    private void killingSpree(){
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println("killing spree!!!!");
-        for(Thread t : threads){
-            t.interrupt();
-        }
+    public static MicroService getInstance() {
+        return SingletonHolder.instance;
+    }
+
+    // we are responsible for creating only one
+    private TimeService() {
+        super("TimeService");
     }
 
     @Override
     protected void initialize() {
         Timer timer = new Timer("Timer");
-        Thread killer = new Thread(this::killingSpree);
 
         TimerTask repeatedTask = new TimerTask() {
             public void run() {
@@ -79,12 +62,10 @@ public class TimeService extends MicroService {
                     timer.cancel();
                     timer.purge();
 
-//                    killer.start();
                 }
             }
         };
         timer.scheduleAtFixedRate(repeatedTask, 0, speed);
-//        System.out.println("im here my tick is" + tickCount);
         terminate();
     }
 }

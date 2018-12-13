@@ -20,15 +20,13 @@ public class MessageBusImpl implements MessageBus {
 
     private Map<Class, RotatingQueue<MicroService>> eventTypeToServices;
     private Map<String, BlockingQueue<Message>> serviceToQueue;
-    private Map<Class, RotatingQueue<MicroService>> broadcastToServices;
-    private Queue<Future> futuresLog;
+    private Map<Class, Queue<MicroService>> broadcastToServices;
 
 
     private MessageBusImpl() {
         eventTypeToServices = new ConcurrentHashMap<>();
         serviceToQueue = new ConcurrentHashMap<>();
         broadcastToServices = new ConcurrentHashMap<>();
-        futuresLog = new ConcurrentLinkedQueue<>();
     }
 
     private static class SingletonHolder {
@@ -41,26 +39,28 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-        RotatingQueue<MicroService> services = eventTypeToServices.get(type);
-        if (CollectionUtils.isEmpty(services)) {
-            services = new RotatingQueue<>();
-            services.addFirst(m);
-        } else {
-            services.addFirst(m);
+
+        if (eventTypeToServices.get(type) == null) {
+            synchronized (this) {
+                if (eventTypeToServices.get(type) == null) {
+                    eventTypeToServices.put(type, new RotatingQueue<>());
+                }
+            }
         }
-        eventTypeToServices.put(type, services);
+        eventTypeToServices.get(type).add(m);
     }
+
 
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
-        RotatingQueue<MicroService> microServices = broadcastToServices.get(type);
-        if (CollectionUtils.isEmpty(microServices)) {
-            microServices = new RotatingQueue<>();
-            microServices.addFirst(m);
-        } else {
-            microServices.addFirst(m);
+        if (broadcastToServices.get(type) == null) {
+            synchronized (this) {
+                if (broadcastToServices.get(type) == null) {
+                    broadcastToServices.put(type, new ConcurrentLinkedQueue<>());
+                }
+            }
         }
-        broadcastToServices.put(type, microServices);
+        broadcastToServices.get(type).add(m);
     }
 
     @Override
@@ -77,10 +77,6 @@ public class MessageBusImpl implements MessageBus {
             BlockingQueue<Message> currentQ = serviceToQueue.get(microService.getName());
             try {
                 currentQ.put(b);
-
-//                System.out.println("--------------------------------------");
-//                System.out.println(serviceToQueue.toString());
-//                System.out.println("--------------------------------------");
             } catch (InterruptedException e) {
                 System.out.println("!!!!! was interupted while waiting for put in broadcast queue!!!");
             }
@@ -94,7 +90,6 @@ public class MessageBusImpl implements MessageBus {
         MicroService service = services.getAndRotate();
         BlockingQueue<Message> events = serviceToQueue.get(service.getName());
         Future<T> future = new Future<>();
-        futuresLog.add(future);
         e.setFuture(future);
         try {
             events.put(e);
@@ -111,19 +106,16 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public void unregister(MicroService m) {
-        if (!(m instanceof TimeService)) {
-            destroyTheFuture();
+        BlockingQueue<Message> q = serviceToQueue.get(m.getName());
+        for (Message message : q){
+            if (message instanceof Event){
+                Event e = (Event) message;
+                e.getFuture().resolve(null);
+            }
         }
         serviceToQueue.remove(m.getName());
         removeFromValues(eventTypeToServices, m);
         removeFromValues(broadcastToServices, m);
-    }
-
-    private void destroyTheFuture() {
-//        System.out.println("im destroying the future");
-        for (Future future: futuresLog){
-            future.resolve(null);
-        }
     }
 
     private void removeFromValues(Map<Class, ? extends Collection> map, MicroService m) {
