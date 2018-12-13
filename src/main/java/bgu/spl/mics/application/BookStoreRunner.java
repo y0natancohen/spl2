@@ -41,7 +41,7 @@ public class BookStoreRunner {
         List<MicroService> services = extractServices(gson, servicesJsonObj, countDownLatch);
         List<Thread> threadPool = new ArrayList<>(services.size());
         services.forEach(service -> {
-            Thread thread = new Thread(service);
+            Thread thread = new Thread(service, String.format("threadOf %s", service.getName()));
             threadPool.add(thread);
             thread.start();
         });
@@ -57,6 +57,7 @@ public class BookStoreRunner {
         System.out.println("system has " + threadPool.size());
         threadPool.forEach(thread -> {
             try {
+                System.out.println(String.format("joining thread is: %s", thread.getName()));
                 thread.join();
             } catch (InterruptedException e) {
                 System.out.println("!!!!! was interupted while waiting for threads to join!!!");
@@ -131,9 +132,7 @@ public class BookStoreRunner {
         }
         List<Customer> customers = getArrayFromJson("customers", Customer[].class, servicesJsonObj, gson);
         customers.sort(Comparator.comparing(Customer::getId));
-        customers.forEach(customer -> {
-            services.add(new APIService(customer, countDownLatch));
-        });
+        customers.forEach(customer -> services.add(new APIService(customer, countDownLatch)));
         return services;
     }
 
