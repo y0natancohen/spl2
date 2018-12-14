@@ -48,23 +48,26 @@ public class ResourceService extends MicroService {
     }
 
     private void destroyTheDeliveryFuture() {
-//        System.out.println("im destroying the delivery future");
-        for (Future future : futuresLog){
+        for (Future future : futuresLog) {
             future.resolve(null);
         }
     }
 
     private void release(ReleaseVehicleEvent releaseEvent) {
-        if (BookStoreRunner.debug){System.out.println("inside ResourceService.release()");}
+        if (BookStoreRunner.debug) {
+            System.out.println("inside ResourceService.release()");
+        }
         resources.releaseVehicle(releaseEvent.getVehicle());
         complete(releaseEvent, true);
     }
 
     private void aquire(AcquireVehicleEvent aquireEvent) {
-        if (BookStoreRunner.debug){System.out.println("inside ResourceService.aquire()");}
+        if (BookStoreRunner.debug) {
+            System.out.println("inside ResourceService.aquire()");
+        }
         Future<DeliveryVehicle> deliveryVehicleFuture = resources.acquireVehicle();
         futuresLog.add(deliveryVehicleFuture);
-        complete(aquireEvent, deliveryVehicleFuture);
+        complete(aquireEvent, deliveryVehicleFuture.get());
     }
 
 }
