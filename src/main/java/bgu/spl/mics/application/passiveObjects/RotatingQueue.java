@@ -8,8 +8,10 @@ public class RotatingQueue<E> extends ConcurrentLinkedDeque<E>{
         //todo couldnt find a better way then sync... convert to cas maybe?
         synchronized (this){
             E result = removeFirst();
-            addLast(result);
-            return result;
+            if (result != null){
+                addLast(result);
+                return result;
+            }else return null;
         }
     }
 }

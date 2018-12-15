@@ -2,7 +2,6 @@ package bgu.spl.mics;
 
 import bgu.spl.mics.application.BookStoreRunner;
 import bgu.spl.mics.application.messages.PoisonPill;
-import bgu.spl.mics.application.services.TimeService;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

@@ -45,8 +45,12 @@ public class LogisticsService extends MicroService {
             complete(deliveryEvent, false);
         }else{
             DeliveryVehicle vehicle = deliveryVehicleFuture.get();
-            vehicle.deliver(deliveryEvent.getAddress(), deliveryEvent.getDistance());
-            sendEvent(new ReleaseVehicleEvent(vehicle));
+            if (vehicle != null){
+				String address = deliveryEvent.getAddress();
+				int distance = deliveryEvent.getDistance();
+				vehicle.deliver(address, distance); // here null
+				sendEvent(new ReleaseVehicleEvent(vehicle));
+			}
             complete(deliveryEvent, true);
         }
 	}

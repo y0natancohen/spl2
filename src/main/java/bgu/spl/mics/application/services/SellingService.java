@@ -38,23 +38,28 @@ public class SellingService extends MicroService {
     }
 
 
-    public void processOrder(BookOrderEvent bookOrderEvent) {
+    private void processOrder(BookOrderEvent bookOrderEvent) {
         if (BookStoreRunner.debug){System.out.println("inside SellingService.processOrder()");}
         int processTick = timeTrack.get();
         OrderReceipt receipt = null;
         Integer price = getBookPrice(bookOrderEvent);
         boolean success = false;
-        if (price != -1 && bookOrderEvent.getCustomer().getCreditCard().getAmount() >= price) {
-            synchronized (bookOrderEvent.getCustomer()) { // 2 orders from same customer will be synced
-                if (bookOrderEvent.getCustomer().getCreditCard().getAmount() >= price) {
-                    OrderResult result = tryTake(bookOrderEvent);
-                    if (result == OrderResult.SUCCESSFULLY_TAKEN) {
-                        moneyRegister.chargeCreditCard(bookOrderEvent.getCustomer(), price);
-                        success = true;
+        if (price != null){
+            if (price != -1 && bookOrderEvent.getCustomer().getCreditCard().getAmount() >= price) {
+                synchronized (bookOrderEvent.getCustomer()) { // 2 orders from same customer will be synced
+                    if (bookOrderEvent.getCustomer().getCreditCard().getAmount() >= price) {
+                        OrderResult result = tryTake(bookOrderEvent);
+                        if (result != null){
+                            if (result == OrderResult.SUCCESSFULLY_TAKEN) {
+                                moneyRegister.chargeCreditCard(bookOrderEvent.getCustomer(), price);
+                                success = true;
+                            }
+                        }
                     }
                 }
             }
         }
+
         if (success) {
             receipt = new OrderReceipt(bookOrderEvent.getOrderId(), this.getName(),
                     bookOrderEvent.getCustomer().getId(),

@@ -6,10 +6,7 @@ import bgu.spl.mics.application.BookStoreRunner;
 import bgu.spl.mics.application.messages.AcquireVehicleEvent;
 import bgu.spl.mics.application.messages.PoisonPill;
 import bgu.spl.mics.application.messages.ReleaseVehicleEvent;
-import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
-import bgu.spl.mics.application.passiveObjects.Inventory;
-import bgu.spl.mics.application.passiveObjects.MoneyRegister;
-import bgu.spl.mics.application.passiveObjects.ResourcesHolder;
+import bgu.spl.mics.application.passiveObjects.*;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -48,7 +45,6 @@ public class ResourceService extends MicroService {
     }
 
     private void destroyTheDeliveryFuture() {
-//        System.out.println("im destroying the delivery future");
         for (Future future : futuresLog){
             future.resolve(null);
         }

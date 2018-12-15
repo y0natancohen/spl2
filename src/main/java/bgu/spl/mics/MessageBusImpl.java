@@ -80,7 +80,9 @@ public class MessageBusImpl implements MessageBus {
             services.forEach(microService -> {
                 BlockingQueue<Message> currentQ = serviceToQueue.get(microService.getName());
                 try {
-                    currentQ.put(b);
+                    if (currentQ != null){
+                        currentQ.put(b);
+                    }
                 } catch (InterruptedException e) {
                     System.out.println("!!!!! was interupted while waiting for put in broadcast queue!!!");
                 }
@@ -92,18 +94,22 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public <T> Future<T> sendEvent(Event<T> e) {
-        RotatingQueue<MicroService> services = eventTypeToServices.get(e.getClass());
+        RotatingQueue<MicroService> roundRobinServices = eventTypeToServices.get(e.getClass());
         Future<T> future = new Future<>();
         e.setFuture(future);
-        if (services == null){ // no one cares about this event, so no result as well
+        if (roundRobinServices == null){ // no one cares about this event, so no result as well
             future.resolve(null);
         }else{
-            MicroService service = services.getAndRotate();
-            BlockingQueue<Message> events = serviceToQueue.get(service.getName());
-            try {
-                events.put(e);
-            } catch (InterruptedException e1) {
-                System.out.println("!!!!! was interupted while waiting to put in event queue!!!");
+            MicroService service = roundRobinServices.getAndRotate();
+            if (service != null){
+                BlockingQueue<Message> events = serviceToQueue.get(service.getName());
+                try {
+                    if (events != null){
+                        events.put(e);
+                    }
+                } catch (InterruptedException e1) {
+                    System.out.println("!!!!! was interupted while waiting to put in event queue!!!");
+                }
             }
         }
 

@@ -25,7 +25,7 @@ public class MoneyRegister implements Serializable{
      * Retrieves the single instance of this class.
      */
 
-    AtomicInteger total;
+    private AtomicInteger total;
 
     private static Queue<OrderReceipt> orderReceipts;
 
