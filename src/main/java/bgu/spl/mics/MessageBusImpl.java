@@ -41,7 +41,7 @@ public class MessageBusImpl implements MessageBus {
 
     @Override
     public <T> void subscribeEvent(Class<? extends Event<T>> type, MicroService m) {
-
+        // new is not atomic action needs bo synched
         if (eventTypeToServices.get(type) == null) {
             synchronized (this) {
                 if (eventTypeToServices.get(type) == null) {
@@ -56,6 +56,7 @@ public class MessageBusImpl implements MessageBus {
     @Override
     public void subscribeBroadcast(Class<? extends Broadcast> type, MicroService m) {
         if (broadcastToServices.get(type) == null) {
+            // new is not atomic action needs bo synched
             synchronized (this) {
                 if (broadcastToServices.get(type) == null) {
                     broadcastToServices.put(type, new ConcurrentLinkedQueue<>());

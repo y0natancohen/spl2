@@ -1,8 +1,5 @@
 package bgu.spl.mics;
 
-import bgu.spl.mics.application.BookStoreRunner;
-import bgu.spl.mics.application.messages.PoisonPill;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -175,7 +172,6 @@ public abstract class MicroService implements Runnable {
                 if (message instanceof Event) {
                     eventToCallback.get(message.getClass()).call(message);
                 } else if (message instanceof Broadcast) {
-                    if (BookStoreRunner.debug){ if (message instanceof PoisonPill){System.out.println(this.name + " was  poisoned");}}
                     broadcastToCallback.get(message.getClass()).call(message);
                 }
             } catch (InterruptedException e) {
@@ -183,7 +179,6 @@ public abstract class MicroService implements Runnable {
                 terminated = true;
             }
         }
-        if (BookStoreRunner.debug){System.out.println("leaving" + getName());}
     }
 
 }

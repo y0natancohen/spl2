@@ -1,8 +1,6 @@
 package bgu.spl.mics.application.passiveObjects;
 
 
-import bgu.spl.mics.application.BookStoreRunner;
-
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -70,7 +68,7 @@ public class Inventory {
      * second should reduce by one the number of books of the desired type.
      */
     public OrderResult take(String book) {
-        if (BookStoreRunner.debug){System.out.println("inside Inventory.take()");}
+        // sync to prevent taking the same book together
         synchronized (getInstance()) {
             for (BookInventoryInfo bookInfo : bookInventoryInfos) {
                 if (bookInfo.getBookTitle().equals(book) && bookInfo.getAmountInInventory() > 0) {
@@ -91,8 +89,8 @@ public class Inventory {
      * @return the price of the book if it is available, -1 otherwise.
      */
     public int checkAvailabiltyAndGetPrice(String book) {
-        if (BookStoreRunner.debug){System.out.println("inside Inventory.checkAvailabiltyAndGetPrice()");}
         if (getBookInfo(book) == null) return -1;
+        // sync to prevent taking the same book together
         synchronized (getBookInfo(book)) {
             BookInventoryInfo bookInfo = getBookInfo(book);
             if ((bookInfo != null) && (bookInfo.getAmountInInventory() > 0)) {
@@ -130,13 +128,6 @@ public class Inventory {
             objectOutputStream.writeObject(map);
         } catch (IOException e) {
             System.out.println("could not write books inventory");
-        }
-    }
-
-    // todo: delete this func
-    public void printInventory() {
-        for (BookInventoryInfo bookInfo : bookInventoryInfos) {
-            System.out.println(bookInfo.getBookTitle() + " : " + bookInfo.getAmountInInventory());
         }
     }
 }

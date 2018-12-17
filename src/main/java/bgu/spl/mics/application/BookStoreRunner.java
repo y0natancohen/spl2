@@ -1,6 +1,5 @@
 package bgu.spl.mics.application;
 
-import bgu.spl.mics.MessageBusImpl;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.passiveObjects.*;
 import bgu.spl.mics.application.services.*;
@@ -27,7 +26,6 @@ import java.util.stream.Collectors;
 
 
 public class BookStoreRunner {
-    public static boolean debug = false;
     public static void main(String[] args) {
         System.out.println("starting...");
         String configFilePath = args[0];
@@ -60,40 +58,19 @@ public class BookStoreRunner {
         // initiate time service
         runSystem(gson, servicesJsonObj, threadPool);
         handleOutput(args, services);
-//        printStuffForUs(services);
     }
 
     private static void runSystem(Gson gson, JsonObject servicesJsonObj, List<Thread> threadPool) {
         TimeService timeService = gson.fromJson(servicesJsonObj.get("time"), TimeService.class);
         Thread timeServiceThread = new Thread(timeService);
         timeServiceThread.start();
-        if (BookStoreRunner.debug){System.out.println("system has " + threadPool.size());}
         threadPool.forEach(thread -> {
             try {
-                if (BookStoreRunner.debug){System.out.println(String.format("joining thread is: %s", thread.getName()));}
                 thread.join();
             } catch (InterruptedException e) {
                 System.out.println("!!!!! was interupted while waiting for threads to join!!!");
             }
         });
-    }
-
-    private static void printStuffForUs(List<MicroService> services) {
-        System.out.println();
-        System.out.println();
-        List<APIService> apiServices = services.stream()
-                .filter(service -> service instanceof APIService)
-                .map(service -> (APIService) service)
-                .collect(Collectors.toList());
-        Map<String, Integer> customerById = apiServices.stream()
-                .map(APIService::getCustomer)
-                .collect(Collectors.toMap(Customer::getName, customer -> customer.getCreditCard().getAmount()));
-        System.out.println("customers:");
-        System.out.println(customerById.toString());
-        System.out.println("total earnings: " + MoneyRegister.getInstance().getTotalEarnings());
-        System.out.println("Inventory:");
-        Inventory.getInstance().printInventory();
-        MessageBusImpl.getInstance().printStuff();
     }
 
     private static void handleOutput(String[] args, List<MicroService> services) {

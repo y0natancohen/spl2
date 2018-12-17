@@ -33,6 +33,7 @@ public class Future<T> {
      * @return return the result of type T if it is available, if not wait until it is available.
      */
     public T get() {
+        // waiting is always synched in such manner
         synchronized (this) {
             try {
                 while (!isDone()) {
@@ -49,6 +50,7 @@ public class Future<T> {
      * Resolves the result of this Future object.
      */
     public void resolve(T result) {
+        // notify all should be synched
         synchronized (this) {
             this.result = result;
             this.isOver = true;
@@ -76,6 +78,7 @@ public class Future<T> {
      * elapsed, return null.
      */
     public T get(long timeout, TimeUnit unit) {
+        // surround wait with synch
         synchronized (this) {
             try {
                 StopWatch stopWatch = new StopWatch();

@@ -2,7 +2,6 @@ package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
-import bgu.spl.mics.application.BookStoreRunner;
 import bgu.spl.mics.application.messages.AcquireVehicleEvent;
 import bgu.spl.mics.application.messages.DeliveryEvent;
 import bgu.spl.mics.application.messages.PoisonPill;
@@ -39,7 +38,6 @@ public class LogisticsService extends MicroService {
 	}
 
 	private void processDelivery(DeliveryEvent deliveryEvent){
-        if (BookStoreRunner.debug){System.out.println("inside LogisticsService.processDelivery()");}
 		Future<DeliveryVehicle> deliveryVehicleFuture = sendEvent(new AcquireVehicleEvent()).get();
 		if (deliveryVehicleFuture == null){  // we are in system shutdown, was resolved with null
             complete(deliveryEvent, false);
@@ -48,7 +46,7 @@ public class LogisticsService extends MicroService {
             if (vehicle != null){
 				String address = deliveryEvent.getAddress();
 				int distance = deliveryEvent.getDistance();
-				vehicle.deliver(address, distance); // here null
+				vehicle.deliver(address, distance);
 				sendEvent(new ReleaseVehicleEvent(vehicle));
 			}
             complete(deliveryEvent, true);

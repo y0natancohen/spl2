@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.passiveObjects;
 
 import bgu.spl.mics.Future;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.Arrays;
 import java.util.Queue;
@@ -24,9 +25,11 @@ public class ResourcesHolder {
     private Semaphore semaphore;
     private Queue<DeliveryVehicle> availableVehicles;
     private Queue<Future<DeliveryVehicle>> waitingFutures;
+    private final Object waitingsLock;
 
     private ResourcesHolder() {
         this.waitingFutures = new ConcurrentLinkedQueue<>();
+        this.waitingsLock = new Object();
     }
 
     private static class SingletonHolder {
@@ -47,12 +50,15 @@ public class ResourcesHolder {
      */
     public Future<DeliveryVehicle> acquireVehicle() {
         Future<DeliveryVehicle> future = new Future<>();
-        if (semaphore.tryAcquire()) {
-            future.resolve(availableVehicles.poll());
-        }else {
-            waitingFutures.add(future);
+        // sync for this scenario: vehicle is released together exactly on acquiring
+        // if release occurred before adding vehicle to waitingFutures this future wont be resolved
+        synchronized (waitingsLock) {
+            if (semaphore.tryAcquire()) {
+                future.resolve(availableVehicles.poll());
+            } else {
+                waitingFutures.add(future);
+            }
         }
-
         return future;
     }
 
@@ -64,11 +70,19 @@ public class ResourcesHolder {
      * @param vehicle {@link DeliveryVehicle} to be released.
      */
     public void releaseVehicle(DeliveryVehicle vehicle) {
-        availableVehicles.add(vehicle);
-        semaphore.release();
-        Future<DeliveryVehicle> deliveryVehicleFuture = waitingFutures.poll();
-        if (deliveryVehicleFuture != null){
-            deliveryVehicleFuture.resolve(vehicle);
+        // sync for this scenario: vehicle is released together exactly on acquiring
+        // if acquiring thread just missed the current release it wont be resolved hence - synched
+        synchronized (waitingsLock) {
+            boolean waitingQEmpty = CollectionUtils.isEmpty(waitingFutures);
+            if (waitingQEmpty) {
+                availableVehicles.add(vehicle);
+                semaphore.release();
+            } else {
+                Future<DeliveryVehicle> deliveryVehicleFuture = waitingFutures.poll();
+                if (deliveryVehicleFuture != null) {
+                    deliveryVehicleFuture.resolve(vehicle);
+                }
+            }
         }
     }
 
